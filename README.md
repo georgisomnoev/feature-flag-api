@@ -11,3 +11,33 @@ The project is built using:
 - [Echo](https://echo.labstack.com) for a router.
 - [PostgreSQL](https://www.postgresql.org) for a database store.
 - [Migrate](https://github.com/golang-migrate/migrate/) for managing DB migrations.
+
+## Prerequsites
+Before running the app please download the dependencies:
+```bash
+make vendor
+```
+Generate certificates:
+```bash
+make generate-certs
+```
+
+## How to run the server
+
+To run the server:
+```bash
+make run
+```
+
+To run the server using docker:
+```bash
+make run-docker
+```
+
+## How to run the tests
+
+To run the unit tests:
+
+```bash
+make test
+```

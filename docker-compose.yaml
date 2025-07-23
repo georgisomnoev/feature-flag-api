@@ -1,0 +1,10 @@
+services:
+    feature-flags-api:
+      container_name: feature-flags-api
+      build:
+        context: ./
+        dockerfile: Dockerfile
+      ports:
+        - "8443:8443" 
+      env_file:
+        - .env
