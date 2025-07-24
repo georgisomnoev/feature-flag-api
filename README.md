@@ -32,7 +32,7 @@ make run-docker
 ```
 
 ## How to run the tests
-To run the unit tests:
+To run all the tests:
 
 ```bash
 make test
