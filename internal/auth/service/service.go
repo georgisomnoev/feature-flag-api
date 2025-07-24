@@ -18,6 +18,7 @@ var (
 	ErrInvalidUserRole    = errors.New("invalid user role")
 )
 
+//go:generate go run github.com/maxbrunsfeld/counterfeiter/v6 -generate
 //counterfeiter:generate . Store
 type Store interface {
 	GetByUsername(context.Context, string) (*model.User, error)

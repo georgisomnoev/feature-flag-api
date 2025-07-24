@@ -13,13 +13,16 @@ The project is built using:
 - [Migrate](https://github.com/golang-migrate/migrate/) for managing DB migrations.
 
 ## Prerequsites
+- Go (v1.20+)
+- Ginkgo CLI (for running the tests)
+
 Before running the app please download the dependencies:
 ```bash
 make vendor
 ```
-Generate certificates:
+Generate server certificates and jwt keys:
 ```bash
-make generate-certs
+make generate-certs-and-keys
 ```
 
 ## How to run the server

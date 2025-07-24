@@ -10,6 +10,7 @@ import (
 	"github.com/labstack/echo/v4"
 )
 
+//go:generate go run github.com/maxbrunsfeld/counterfeiter/v6 -generate
 //counterfeiter:generate . Service
 type Service interface {
 	Authenticate(context.Context, string, string) (string, error)
@@ -23,7 +24,7 @@ func handleAuthenticion(ctx context.Context, svc Service) func(c echo.Context) e
 	return func(c echo.Context) error {
 		var req model.AuthRequest
 		if err := c.Bind(&req); err != nil {
-			return c.JSON(http.StatusInternalServerError, map[string]string{
+			return c.JSON(http.StatusBadRequest, map[string]string{
 				"message": "invalid request",
 			})
 		}

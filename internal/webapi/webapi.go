@@ -8,6 +8,7 @@ import (
 	"os/signal"
 	"sync"
 	"syscall"
+	"time"
 
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
@@ -15,7 +16,7 @@ import (
 )
 
 const (
-	gracefulShutdownTimeout = 5
+	gracefulShutdownTimeout = 5 * time.Second
 )
 
 type TLSConfig struct {
