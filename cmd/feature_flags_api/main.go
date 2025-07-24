@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"sync"
 
 	"github.com/georgisomnoev/feature-flag-api/internal/auth"
 	"github.com/georgisomnoev/feature-flag-api/internal/config"
@@ -10,6 +11,8 @@ import (
 
 func main() {
 	appCtx := context.Background()
+	wg := &sync.WaitGroup{}
+
 	cfg := config.Load()
 
 	srv := webapi.NewWebAPI()
@@ -21,5 +24,7 @@ func main() {
 
 	auth.Process(appCtx, nil, srv)
 
-	srv.Logger.Fatal(webapi.StartServer(srv, cfg.Port, tlsCfg))
+	webapi.Start(appCtx, wg, srv, cfg.Port, tlsCfg)
+
+	wg.Wait()
 }
