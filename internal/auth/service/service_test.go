@@ -7,6 +7,7 @@ import (
 	"github.com/google/uuid"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
+	"golang.org/x/crypto/bcrypt"
 
 	"github.com/georgisomnoev/feature-flag-api/internal/auth/model"
 	"github.com/georgisomnoev/feature-flag-api/internal/auth/service"
@@ -45,10 +46,14 @@ var _ = Describe("Service", func() {
 			password = "testpass"
 			ctx = context.Background()
 
+			// The default cost for bcrypt is 10, which is slow for the tests.
+			hashedPassword, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.MinCost)
+			Expect(err).ToNot(HaveOccurred())
+
 			user = model.User{
 				ID:       uuid.New(),
 				Username: username,
-				Password: "$2a$12$tQHSUdOznU13XDSBeByGses3MkUO/sX2jB2QXP5IpBsZsmkh8iZJa", // bcrypt hash for "testpass"
+				Password: string(hashedPassword),
 				Role:     model.RoleEditor,
 			}
 

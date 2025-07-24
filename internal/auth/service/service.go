@@ -50,7 +50,6 @@ func (a *Service) Authenticate(ctx context.Context, username, password string) (
 		return "", ErrInvalidCredentials
 	}
 
-	//TODO: Move it as a dependency. The default cost is 10 and the tests run really slow.
 	if err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(password)); err != nil {
 		return "", ErrInvalidCredentials
 	}
