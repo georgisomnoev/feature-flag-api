@@ -1,10 +1,40 @@
 services:
-    feature-flags-api:
-      container_name: feature-flags-api
-      build:
-        context: ./
-        dockerfile: Dockerfile
-      ports:
-        - "8443:8443" 
-      env_file:
-        - .env
+  featureflagsapi:
+    container_name: featureflagsapi
+    build:
+      context: ./
+      dockerfile: Dockerfile
+    depends_on:
+      featureflagsdb:
+        condition: service_healthy 
+    ports:
+      - "8443:8443" 
+    env_file:
+      - .env
+  migratedb:
+    image: migrate/migrate:v4.17.1
+    container_name: migratedb
+    volumes:
+      - ./migrations:/migrations
+    entrypoint: [ "migrate", "-path", "/migrations", "-database", "pgx5://ffuser:ffpass@featureflagsdb:5432/featureflagsdb", "up" ]
+    depends_on:
+      featureflagsdb:
+        condition: service_healthy
+  featureflagsdb:
+    image: postgres:15.7
+    container_name: featureflagsdb
+    environment:
+      POSTGRES_USER: ffuser
+      POSTGRES_PASSWORD: ffpass
+      POSTGRES_DB: featureflagsdb
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ffuser -d featureflagsdb"]
+      interval: 1s
+      timeout: 1s
+      retries: 30
+volumes:
+  pgdata:

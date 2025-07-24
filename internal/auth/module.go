@@ -14,9 +14,10 @@ func Process(
 	ctx context.Context,
 	pool *pgxpool.Pool,
 	srv *echo.Echo,
+	jwtHelper service.JWTHelper,
 ) *store.Store {
 	authStore := store.NewStore(pool)
-	authService := service.NewService(authStore, nil) // TODO: Implement the JWT helper
+	authService := service.NewService(authStore, jwtHelper)
 	handler.RegisterHandlers(ctx, srv, authService)
 
 	return authStore

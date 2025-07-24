@@ -23,7 +23,7 @@ func NewStore(pool *pgxpool.Pool) *Store {
 }
 func (s *Store) GetByUsername(ctx context.Context, username string) (*model.User, error) {
 	var user model.User
-	query := fmt.Sprintf("SELECT id, username, password, roles FROM %s WHERE username = $1", UserTable)
+	query := fmt.Sprintf("SELECT id, username, password, role FROM %s WHERE username = $1", UserTable)
 	err := s.pool.QueryRow(ctx, query, username).Scan(&user.ID, &user.Username, &user.Password, &user.Role)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {

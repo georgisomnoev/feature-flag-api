@@ -23,21 +23,52 @@ make generate-certs
 ```
 
 ## How to run the server
-
-To run the server:
-```bash
-make run
-```
-
 To run the server using docker:
 ```bash
 make run-docker
 ```
 
 ## How to run the tests
-
 To run the unit tests:
 
 ```bash
 make test
 ```
+
+## Example requests
+To use the feature flags API, you need to authenticate first.
+Each user has a different permission level. For testing, you can use one of these users:
+
+| Username   | Role   |
+| ---------- | ------ |
+| ted        | viewer |
+| mike       | viewer |
+| john       | editor |
+| uncle_bob  | editor |
+
+The password is the same as the username.
+
+### To get a token with read-only access:
+```bash
+curl -X POST https://127.0.0.1:8443/auth \
+  -H "Content-Type: application/json" \
+  -k \
+  -d '{
+    "username": "mike",
+    "password": "mike"
+  }'
+```
+
+### To get a token with write access:
+```bash
+curl -X POST https://127.0.0.1:8443/auth \
+  -H "Content-Type: application/json" \
+  -k \
+  -d '{
+    "username": "john",
+    "password": "john"
+  }'
+```
+
+Note: Use the generated token as a Bearer token in the Authorization header when calling the feature flag endpoints.
+
