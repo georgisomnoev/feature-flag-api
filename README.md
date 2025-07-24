@@ -1,7 +1,7 @@
 # Feature Flags API
 
 ## Description
-FeatureFlagsAPI is an app that lets you manage feature flags. You can perform basic CRUD operation over the feature flag data. Access to this data is controlled by a predefined list of users with different permission levels.
+FeatureFlagsAPI is an app that lets you manage feature flags. You can perform basic CRUD operations over the feature flag data. Access to this data is controlled by a predefined list of users with different permission levels.
 
 ## Architecture
 The project is built using:
