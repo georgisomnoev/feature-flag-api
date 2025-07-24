@@ -43,10 +43,14 @@ func NewService(store Store, jwtHelper JWTHelper) *Service {
 
 func (a *Service) Authenticate(ctx context.Context, username, password string) (string, error) {
 	user, err := a.store.GetByUsername(ctx, username)
-	if err != nil || user == nil {
+	if err != nil {
+		return "", fmt.Errorf("failed to get user data: %w", err)
+	}
+	if user == nil {
 		return "", ErrInvalidCredentials
 	}
 
+	//TODO: Move it as a dependency. The default cost is 10 and the tests run really slow.
 	if err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(password)); err != nil {
 		return "", ErrInvalidCredentials
 	}
