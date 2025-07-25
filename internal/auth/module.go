@@ -15,7 +15,8 @@ func Process(
 ) *store.Store {
 	authStore := store.NewStore(pool)
 	authService := service.NewService(authStore, jwtHelper)
-	handler.RegisterHandlers(srv, authService)
+	authHandler := handler.NewHandler(authService)
+	authHandler.RegisterHandlers(srv)
 
 	return authStore
 }

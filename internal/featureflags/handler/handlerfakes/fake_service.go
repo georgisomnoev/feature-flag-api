@@ -2,17 +2,20 @@
 package handlerfakes
 
 import (
+	"context"
 	"sync"
 
 	"github.com/georgisomnoev/feature-flag-api/internal/featureflags/handler"
-	echo "github.com/labstack/echo/v4"
+	"github.com/georgisomnoev/feature-flag-api/internal/featureflags/model"
+	"github.com/google/uuid"
 )
 
 type FakeService struct {
-	CreateFlagStub        func(echo.Context) error
+	CreateFlagStub        func(context.Context, model.FeatureFlag) error
 	createFlagMutex       sync.RWMutex
 	createFlagArgsForCall []struct {
-		arg1 echo.Context
+		arg1 context.Context
+		arg2 model.FeatureFlag
 	}
 	createFlagReturns struct {
 		result1 error
@@ -20,10 +23,11 @@ type FakeService struct {
 	createFlagReturnsOnCall map[int]struct {
 		result1 error
 	}
-	DeleteFlagStub        func(echo.Context) error
+	DeleteFlagStub        func(context.Context, uuid.UUID) error
 	deleteFlagMutex       sync.RWMutex
 	deleteFlagArgsForCall []struct {
-		arg1 echo.Context
+		arg1 context.Context
+		arg2 uuid.UUID
 	}
 	deleteFlagReturns struct {
 		result1 error
@@ -31,32 +35,38 @@ type FakeService struct {
 	deleteFlagReturnsOnCall map[int]struct {
 		result1 error
 	}
-	GetFlagByIDStub        func(echo.Context) error
+	GetFlagByIDStub        func(context.Context, uuid.UUID) (model.FeatureFlag, error)
 	getFlagByIDMutex       sync.RWMutex
 	getFlagByIDArgsForCall []struct {
-		arg1 echo.Context
+		arg1 context.Context
+		arg2 uuid.UUID
 	}
 	getFlagByIDReturns struct {
-		result1 error
+		result1 model.FeatureFlag
+		result2 error
 	}
 	getFlagByIDReturnsOnCall map[int]struct {
-		result1 error
+		result1 model.FeatureFlag
+		result2 error
 	}
-	ListFlagsStub        func(echo.Context) error
+	ListFlagsStub        func(context.Context) ([]model.FeatureFlag, error)
 	listFlagsMutex       sync.RWMutex
 	listFlagsArgsForCall []struct {
-		arg1 echo.Context
+		arg1 context.Context
 	}
 	listFlagsReturns struct {
-		result1 error
+		result1 []model.FeatureFlag
+		result2 error
 	}
 	listFlagsReturnsOnCall map[int]struct {
-		result1 error
+		result1 []model.FeatureFlag
+		result2 error
 	}
-	UpdateFlagStub        func(echo.Context) error
+	UpdateFlagStub        func(context.Context, model.FeatureFlag) error
 	updateFlagMutex       sync.RWMutex
 	updateFlagArgsForCall []struct {
-		arg1 echo.Context
+		arg1 context.Context
+		arg2 model.FeatureFlag
 	}
 	updateFlagReturns struct {
 		result1 error
@@ -68,18 +78,19 @@ type FakeService struct {
 	invocationsMutex sync.RWMutex
 }
 
-func (fake *FakeService) CreateFlag(arg1 echo.Context) error {
+func (fake *FakeService) CreateFlag(arg1 context.Context, arg2 model.FeatureFlag) error {
 	fake.createFlagMutex.Lock()
 	ret, specificReturn := fake.createFlagReturnsOnCall[len(fake.createFlagArgsForCall)]
 	fake.createFlagArgsForCall = append(fake.createFlagArgsForCall, struct {
-		arg1 echo.Context
-	}{arg1})
+		arg1 context.Context
+		arg2 model.FeatureFlag
+	}{arg1, arg2})
 	stub := fake.CreateFlagStub
 	fakeReturns := fake.createFlagReturns
-	fake.recordInvocation("CreateFlag", []interface{}{arg1})
+	fake.recordInvocation("CreateFlag", []interface{}{arg1, arg2})
 	fake.createFlagMutex.Unlock()
 	if stub != nil {
-		return stub(arg1)
+		return stub(arg1, arg2)
 	}
 	if specificReturn {
 		return ret.result1
@@ -93,17 +104,17 @@ func (fake *FakeService) CreateFlagCallCount() int {
 	return len(fake.createFlagArgsForCall)
 }
 
-func (fake *FakeService) CreateFlagCalls(stub func(echo.Context) error) {
+func (fake *FakeService) CreateFlagCalls(stub func(context.Context, model.FeatureFlag) error) {
 	fake.createFlagMutex.Lock()
 	defer fake.createFlagMutex.Unlock()
 	fake.CreateFlagStub = stub
 }
 
-func (fake *FakeService) CreateFlagArgsForCall(i int) echo.Context {
+func (fake *FakeService) CreateFlagArgsForCall(i int) (context.Context, model.FeatureFlag) {
 	fake.createFlagMutex.RLock()
 	defer fake.createFlagMutex.RUnlock()
 	argsForCall := fake.createFlagArgsForCall[i]
-	return argsForCall.arg1
+	return argsForCall.arg1, argsForCall.arg2
 }
 
 func (fake *FakeService) CreateFlagReturns(result1 error) {
@@ -129,18 +140,19 @@ func (fake *FakeService) CreateFlagReturnsOnCall(i int, result1 error) {
 	}{result1}
 }
 
-func (fake *FakeService) DeleteFlag(arg1 echo.Context) error {
+func (fake *FakeService) DeleteFlag(arg1 context.Context, arg2 uuid.UUID) error {
 	fake.deleteFlagMutex.Lock()
 	ret, specificReturn := fake.deleteFlagReturnsOnCall[len(fake.deleteFlagArgsForCall)]
 	fake.deleteFlagArgsForCall = append(fake.deleteFlagArgsForCall, struct {
-		arg1 echo.Context
-	}{arg1})
+		arg1 context.Context
+		arg2 uuid.UUID
+	}{arg1, arg2})
 	stub := fake.DeleteFlagStub
 	fakeReturns := fake.deleteFlagReturns
-	fake.recordInvocation("DeleteFlag", []interface{}{arg1})
+	fake.recordInvocation("DeleteFlag", []interface{}{arg1, arg2})
 	fake.deleteFlagMutex.Unlock()
 	if stub != nil {
-		return stub(arg1)
+		return stub(arg1, arg2)
 	}
 	if specificReturn {
 		return ret.result1
@@ -154,17 +166,17 @@ func (fake *FakeService) DeleteFlagCallCount() int {
 	return len(fake.deleteFlagArgsForCall)
 }
 
-func (fake *FakeService) DeleteFlagCalls(stub func(echo.Context) error) {
+func (fake *FakeService) DeleteFlagCalls(stub func(context.Context, uuid.UUID) error) {
 	fake.deleteFlagMutex.Lock()
 	defer fake.deleteFlagMutex.Unlock()
 	fake.DeleteFlagStub = stub
 }
 
-func (fake *FakeService) DeleteFlagArgsForCall(i int) echo.Context {
+func (fake *FakeService) DeleteFlagArgsForCall(i int) (context.Context, uuid.UUID) {
 	fake.deleteFlagMutex.RLock()
 	defer fake.deleteFlagMutex.RUnlock()
 	argsForCall := fake.deleteFlagArgsForCall[i]
-	return argsForCall.arg1
+	return argsForCall.arg1, argsForCall.arg2
 }
 
 func (fake *FakeService) DeleteFlagReturns(result1 error) {
@@ -190,23 +202,24 @@ func (fake *FakeService) DeleteFlagReturnsOnCall(i int, result1 error) {
 	}{result1}
 }
 
-func (fake *FakeService) GetFlagByID(arg1 echo.Context) error {
+func (fake *FakeService) GetFlagByID(arg1 context.Context, arg2 uuid.UUID) (model.FeatureFlag, error) {
 	fake.getFlagByIDMutex.Lock()
 	ret, specificReturn := fake.getFlagByIDReturnsOnCall[len(fake.getFlagByIDArgsForCall)]
 	fake.getFlagByIDArgsForCall = append(fake.getFlagByIDArgsForCall, struct {
-		arg1 echo.Context
-	}{arg1})
+		arg1 context.Context
+		arg2 uuid.UUID
+	}{arg1, arg2})
 	stub := fake.GetFlagByIDStub
 	fakeReturns := fake.getFlagByIDReturns
-	fake.recordInvocation("GetFlagByID", []interface{}{arg1})
+	fake.recordInvocation("GetFlagByID", []interface{}{arg1, arg2})
 	fake.getFlagByIDMutex.Unlock()
 	if stub != nil {
-		return stub(arg1)
+		return stub(arg1, arg2)
 	}
 	if specificReturn {
-		return ret.result1
+		return ret.result1, ret.result2
 	}
-	return fakeReturns.result1
+	return fakeReturns.result1, fakeReturns.result2
 }
 
 func (fake *FakeService) GetFlagByIDCallCount() int {
@@ -215,47 +228,50 @@ func (fake *FakeService) GetFlagByIDCallCount() int {
 	return len(fake.getFlagByIDArgsForCall)
 }
 
-func (fake *FakeService) GetFlagByIDCalls(stub func(echo.Context) error) {
+func (fake *FakeService) GetFlagByIDCalls(stub func(context.Context, uuid.UUID) (model.FeatureFlag, error)) {
 	fake.getFlagByIDMutex.Lock()
 	defer fake.getFlagByIDMutex.Unlock()
 	fake.GetFlagByIDStub = stub
 }
 
-func (fake *FakeService) GetFlagByIDArgsForCall(i int) echo.Context {
+func (fake *FakeService) GetFlagByIDArgsForCall(i int) (context.Context, uuid.UUID) {
 	fake.getFlagByIDMutex.RLock()
 	defer fake.getFlagByIDMutex.RUnlock()
 	argsForCall := fake.getFlagByIDArgsForCall[i]
-	return argsForCall.arg1
+	return argsForCall.arg1, argsForCall.arg2
 }
 
-func (fake *FakeService) GetFlagByIDReturns(result1 error) {
+func (fake *FakeService) GetFlagByIDReturns(result1 model.FeatureFlag, result2 error) {
 	fake.getFlagByIDMutex.Lock()
 	defer fake.getFlagByIDMutex.Unlock()
 	fake.GetFlagByIDStub = nil
 	fake.getFlagByIDReturns = struct {
-		result1 error
-	}{result1}
+		result1 model.FeatureFlag
+		result2 error
+	}{result1, result2}
 }
 
-func (fake *FakeService) GetFlagByIDReturnsOnCall(i int, result1 error) {
+func (fake *FakeService) GetFlagByIDReturnsOnCall(i int, result1 model.FeatureFlag, result2 error) {
 	fake.getFlagByIDMutex.Lock()
 	defer fake.getFlagByIDMutex.Unlock()
 	fake.GetFlagByIDStub = nil
 	if fake.getFlagByIDReturnsOnCall == nil {
 		fake.getFlagByIDReturnsOnCall = make(map[int]struct {
-			result1 error
+			result1 model.FeatureFlag
+			result2 error
 		})
 	}
 	fake.getFlagByIDReturnsOnCall[i] = struct {
-		result1 error
-	}{result1}
+		result1 model.FeatureFlag
+		result2 error
+	}{result1, result2}
 }
 
-func (fake *FakeService) ListFlags(arg1 echo.Context) error {
+func (fake *FakeService) ListFlags(arg1 context.Context) ([]model.FeatureFlag, error) {
 	fake.listFlagsMutex.Lock()
 	ret, specificReturn := fake.listFlagsReturnsOnCall[len(fake.listFlagsArgsForCall)]
 	fake.listFlagsArgsForCall = append(fake.listFlagsArgsForCall, struct {
-		arg1 echo.Context
+		arg1 context.Context
 	}{arg1})
 	stub := fake.ListFlagsStub
 	fakeReturns := fake.listFlagsReturns
@@ -265,9 +281,9 @@ func (fake *FakeService) ListFlags(arg1 echo.Context) error {
 		return stub(arg1)
 	}
 	if specificReturn {
-		return ret.result1
+		return ret.result1, ret.result2
 	}
-	return fakeReturns.result1
+	return fakeReturns.result1, fakeReturns.result2
 }
 
 func (fake *FakeService) ListFlagsCallCount() int {
@@ -276,54 +292,58 @@ func (fake *FakeService) ListFlagsCallCount() int {
 	return len(fake.listFlagsArgsForCall)
 }
 
-func (fake *FakeService) ListFlagsCalls(stub func(echo.Context) error) {
+func (fake *FakeService) ListFlagsCalls(stub func(context.Context) ([]model.FeatureFlag, error)) {
 	fake.listFlagsMutex.Lock()
 	defer fake.listFlagsMutex.Unlock()
 	fake.ListFlagsStub = stub
 }
 
-func (fake *FakeService) ListFlagsArgsForCall(i int) echo.Context {
+func (fake *FakeService) ListFlagsArgsForCall(i int) context.Context {
 	fake.listFlagsMutex.RLock()
 	defer fake.listFlagsMutex.RUnlock()
 	argsForCall := fake.listFlagsArgsForCall[i]
 	return argsForCall.arg1
 }
 
-func (fake *FakeService) ListFlagsReturns(result1 error) {
+func (fake *FakeService) ListFlagsReturns(result1 []model.FeatureFlag, result2 error) {
 	fake.listFlagsMutex.Lock()
 	defer fake.listFlagsMutex.Unlock()
 	fake.ListFlagsStub = nil
 	fake.listFlagsReturns = struct {
-		result1 error
-	}{result1}
+		result1 []model.FeatureFlag
+		result2 error
+	}{result1, result2}
 }
 
-func (fake *FakeService) ListFlagsReturnsOnCall(i int, result1 error) {
+func (fake *FakeService) ListFlagsReturnsOnCall(i int, result1 []model.FeatureFlag, result2 error) {
 	fake.listFlagsMutex.Lock()
 	defer fake.listFlagsMutex.Unlock()
 	fake.ListFlagsStub = nil
 	if fake.listFlagsReturnsOnCall == nil {
 		fake.listFlagsReturnsOnCall = make(map[int]struct {
-			result1 error
+			result1 []model.FeatureFlag
+			result2 error
 		})
 	}
 	fake.listFlagsReturnsOnCall[i] = struct {
-		result1 error
-	}{result1}
+		result1 []model.FeatureFlag
+		result2 error
+	}{result1, result2}
 }
 
-func (fake *FakeService) UpdateFlag(arg1 echo.Context) error {
+func (fake *FakeService) UpdateFlag(arg1 context.Context, arg2 model.FeatureFlag) error {
 	fake.updateFlagMutex.Lock()
 	ret, specificReturn := fake.updateFlagReturnsOnCall[len(fake.updateFlagArgsForCall)]
 	fake.updateFlagArgsForCall = append(fake.updateFlagArgsForCall, struct {
-		arg1 echo.Context
-	}{arg1})
+		arg1 context.Context
+		arg2 model.FeatureFlag
+	}{arg1, arg2})
 	stub := fake.UpdateFlagStub
 	fakeReturns := fake.updateFlagReturns
-	fake.recordInvocation("UpdateFlag", []interface{}{arg1})
+	fake.recordInvocation("UpdateFlag", []interface{}{arg1, arg2})
 	fake.updateFlagMutex.Unlock()
 	if stub != nil {
-		return stub(arg1)
+		return stub(arg1, arg2)
 	}
 	if specificReturn {
 		return ret.result1
@@ -337,17 +357,17 @@ func (fake *FakeService) UpdateFlagCallCount() int {
 	return len(fake.updateFlagArgsForCall)
 }
 
-func (fake *FakeService) UpdateFlagCalls(stub func(echo.Context) error) {
+func (fake *FakeService) UpdateFlagCalls(stub func(context.Context, model.FeatureFlag) error) {
 	fake.updateFlagMutex.Lock()
 	defer fake.updateFlagMutex.Unlock()
 	fake.UpdateFlagStub = stub
 }
 
-func (fake *FakeService) UpdateFlagArgsForCall(i int) echo.Context {
+func (fake *FakeService) UpdateFlagArgsForCall(i int) (context.Context, model.FeatureFlag) {
 	fake.updateFlagMutex.RLock()
 	defer fake.updateFlagMutex.RUnlock()
 	argsForCall := fake.updateFlagArgsForCall[i]
-	return argsForCall.arg1
+	return argsForCall.arg1, argsForCall.arg2
 }
 
 func (fake *FakeService) UpdateFlagReturns(result1 error) {

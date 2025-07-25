@@ -16,29 +16,35 @@ type Service interface {
 	Authenticate(context.Context, string, string) (string, error)
 }
 
-func RegisterHandlers(srv *echo.Echo, svc Service) {
-	srv.POST("/auth", authenticateHandler(svc))
+type Handler struct {
+	svc Service
 }
 
-func authenticateHandler(svc Service) echo.HandlerFunc {
-	return func(c echo.Context) error {
-		var req model.AuthRequest
-		if err := c.Bind(&req); err != nil {
-			return echo.NewHTTPError(http.StatusBadRequest, "invalid request body")
-		}
+func NewHandler(svc Service) *Handler {
+	return &Handler{svc: svc}
+}
 
-		if req.Username == "" || req.Password == "" {
-			return echo.NewHTTPError(http.StatusBadRequest, "username and password are required")
-		}
+func (h *Handler) RegisterHandlers(srv *echo.Echo) {
+	srv.POST("/auth", h.authenticateHandler)
+}
 
-		token, err := svc.Authenticate(c.Request().Context(), req.Username, req.Password)
-		if err != nil {
-			if errors.Is(err, service.ErrInvalidCredentials) {
-				return echo.NewHTTPError(http.StatusUnauthorized, "invalid credentials")
-			}
-			return echo.NewHTTPError(http.StatusInternalServerError, "failed to authenticate user")
-		}
-
-		return c.JSON(http.StatusOK, model.AuthResponse{Token: token})
+func (h *Handler) authenticateHandler(c echo.Context) error {
+	var req model.AuthRequest
+	if err := c.Bind(&req); err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, "invalid request body")
 	}
+
+	if req.Username == "" || req.Password == "" {
+		return echo.NewHTTPError(http.StatusBadRequest, "username and password are required")
+	}
+
+	token, err := h.svc.Authenticate(c.Request().Context(), req.Username, req.Password)
+	if err != nil {
+		if errors.Is(err, service.ErrInvalidCredentials) {
+			return echo.NewHTTPError(http.StatusUnauthorized, "invalid credentials")
+		}
+		return echo.NewHTTPError(http.StatusInternalServerError, "failed to authenticate user")
+	}
+
+	return c.JSON(http.StatusOK, model.AuthResponse{Token: token})
 }

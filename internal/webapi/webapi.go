@@ -7,6 +7,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/georgisomnoev/feature-flag-api/internal/validator"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 	"github.com/labstack/gommon/log"
@@ -29,6 +30,8 @@ func NewWebAPI() *echo.Echo {
 
 	e.Use(middleware.Logger())
 	e.Use(middleware.Recover())
+
+	e.Validator = validator.GetValidator()
 
 	return e
 }

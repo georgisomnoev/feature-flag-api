@@ -23,6 +23,7 @@ var _ = Describe("Authentication Handler", func() {
 		e           *echo.Echo
 		recorder    *httptest.ResponseRecorder
 		authService *handlerfakes.FakeService
+		authHandler *handler.Handler
 	)
 
 	BeforeEach(func() {
@@ -30,7 +31,8 @@ var _ = Describe("Authentication Handler", func() {
 		recorder = httptest.NewRecorder()
 		authService = &handlerfakes.FakeService{}
 
-		handler.RegisterHandlers(e, authService)
+		authHandler = handler.NewHandler(authService)
+		authHandler.RegisterHandlers(e)
 	})
 
 	Describe("POST /auth", func() {

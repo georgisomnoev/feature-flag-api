@@ -14,5 +14,6 @@ func Process(
 ) {
 	//featureFlagStore := store.NewStore(pool)
 	//featureFlagService := service.NewService(featureFlagStore, authStore, jwtHelper)
-	handler.RegisterHandlers(srv, authStore, jwtHelper, nil)
+	featureFlagHandler := handler.NewHandler(nil, authStore, jwtHelper)
+	featureFlagHandler.RegisterHandlers(srv)
 }
