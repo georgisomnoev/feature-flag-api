@@ -11,7 +11,8 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
-const ttl = 1 * time.Hour
+// TODO: Move it as an environment variable. Adjust the tests.
+const ttl = 24 * time.Hour
 
 var (
 	ErrInvalidCredentials = errors.New("invalid credentials")

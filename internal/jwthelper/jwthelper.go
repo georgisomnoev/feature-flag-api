@@ -5,8 +5,15 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"time"
 
 	"github.com/golang-jwt/jwt/v5"
+)
+
+var (
+	ErrUnexpectedSigningMethod = errors.New("unexpected signing method")
+	ErrInvalidToken            = errors.New("invalid token")
+	ErrExpiredToken            = errors.New("token expired")
 )
 
 type JWTHelper struct {
@@ -44,8 +51,33 @@ func (h *JWTHelper) GenerateToken(claims jwt.Claims) (string, error) {
 
 	signedToken, err := token.SignedString(h.privateKey)
 	if err != nil {
-		return "", errors.New("failed to sign token: " + err.Error())
+		return "", fmt.Errorf("failed to sign token: %w", err)
 	}
 
 	return signedToken, nil
+}
+
+func (h *JWTHelper) ValidateToken(tokenString string) (jwt.MapClaims, error) {
+	token, err := jwt.ParseWithClaims(tokenString, &jwt.MapClaims{}, func(token *jwt.Token) (any, error) {
+		if _, ok := token.Method.(*jwt.SigningMethodRSA); !ok {
+			return nil, ErrUnexpectedSigningMethod
+		}
+		return h.publicKey, nil
+	})
+
+	if err != nil {
+		return nil, fmt.Errorf("failed to parse token: %w", err)
+	}
+
+	claims, ok := token.Claims.(jwt.MapClaims)
+	if !ok || !token.Valid {
+		return nil, ErrInvalidToken
+	}
+
+	exp, ok := claims["exp"].(float64)
+	if !ok || time.Now().Unix() > int64(exp) {
+		return nil, ErrExpiredToken
+	}
+
+	return claims, nil
 }
