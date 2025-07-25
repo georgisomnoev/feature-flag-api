@@ -108,6 +108,7 @@ func (h *Handler) createFlag(c echo.Context) error {
 	}
 
 	flag := model.FeatureFlag{
+		ID:          uuid.New(),
 		Key:         req.Key,
 		Description: req.Description,
 		Enabled:     req.Enabled,

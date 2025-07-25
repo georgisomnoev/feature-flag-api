@@ -74,10 +74,18 @@ func validateTokenClaims(ctx context.Context, c echo.Context, claims jwt.MapClai
 	return nil
 }
 
-func validateScopes(scopes any, requiredScope string) bool {
-	scopeList, ok := scopes.([]string)
+func validateScopes(scopes interface{}, requiredScope string) bool {
+	scopeList, ok := scopes.([]interface{})
 	if !ok {
-		return false
+		if scopeStrList, okStr := scopes.([]string); okStr {
+			for _, scope := range scopeStrList {
+				if scope == requiredScope {
+					return true
+				}
+			}
+		} else {
+			return false
+		}
 	}
 
 	for _, scope := range scopeList {

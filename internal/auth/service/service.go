@@ -57,7 +57,7 @@ func (a *Service) Authenticate(ctx context.Context, username, password string) (
 
 	claims := jwt.MapClaims{
 		"sub": user.ID,
-		"exp": time.Now().Add(ttl),
+		"exp": time.Now().Add(ttl).Unix(),
 	}
 
 	switch user.Role {

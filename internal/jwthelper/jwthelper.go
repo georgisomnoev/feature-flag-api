@@ -58,7 +58,7 @@ func (h *JWTHelper) GenerateToken(claims jwt.Claims) (string, error) {
 }
 
 func (h *JWTHelper) ValidateToken(tokenString string) (jwt.MapClaims, error) {
-	token, err := jwt.ParseWithClaims(tokenString, &jwt.MapClaims{}, func(token *jwt.Token) (any, error) {
+	token, err := jwt.ParseWithClaims(tokenString, jwt.MapClaims{}, func(token *jwt.Token) (any, error) {
 		if _, ok := token.Method.(*jwt.SigningMethodRSA); !ok {
 			return nil, ErrUnexpectedSigningMethod
 		}

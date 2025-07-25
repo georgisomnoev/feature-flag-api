@@ -88,3 +88,18 @@ func (s *Store) DeleteFlag(ctx context.Context, id uuid.UUID) error {
 	}
 	return nil
 }
+
+// TODO: Remove and adjust the create handler to return data.
+func (s *Store) GetFlagByKey(ctx context.Context, key string) (model.FeatureFlag, error) {
+	var flag model.FeatureFlag
+	query := fmt.Sprintf(`SELECT id, key, description, enabled, created_at, updated_at FROM %s WHERE key = $1`, FeatureFlagsTable)
+	err := s.pool.QueryRow(ctx, query, key).Scan(&flag.ID, &flag.Key, &flag.Description, &flag.Enabled, &flag.CreatedAt, &flag.UpdatedAt)
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return model.FeatureFlag{}, model.ErrNotFound
+		}
+		return model.FeatureFlag{}, fmt.Errorf("failed to fetch feature flag: %w", err)
+	}
+
+	return flag, nil
+}
