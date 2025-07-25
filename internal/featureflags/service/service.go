@@ -9,10 +9,6 @@ import (
 	"github.com/google/uuid"
 )
 
-var (
-	ErrNotFound = errors.New("feature flag not found")
-)
-
 type Service struct {
 	store Store
 }
@@ -22,6 +18,7 @@ type Service struct {
 type Store interface {
 	ListFlags(ctx context.Context) ([]model.FeatureFlag, error)
 	GetFlagByID(ctx context.Context, id uuid.UUID) (model.FeatureFlag, error)
+
 	CreateFlag(ctx context.Context, flag model.FeatureFlag) error
 	UpdateFlag(ctx context.Context, flag model.FeatureFlag) error
 	DeleteFlag(ctx context.Context, id uuid.UUID) error
@@ -42,8 +39,8 @@ func (s *Service) ListFlags(ctx context.Context) ([]model.FeatureFlag, error) {
 func (s *Service) GetFlagByID(ctx context.Context, id uuid.UUID) (model.FeatureFlag, error) {
 	flag, err := s.store.GetFlagByID(ctx, id)
 	if err != nil {
-		if errors.Is(err, ErrNotFound) {
-			return model.FeatureFlag{}, ErrNotFound
+		if errors.Is(err, model.ErrNotFound) {
+			return model.FeatureFlag{}, model.ErrNotFound
 		}
 		return model.FeatureFlag{}, fmt.Errorf("failed to fetch flag: %w", err)
 	}
@@ -59,8 +56,8 @@ func (s *Service) CreateFlag(ctx context.Context, flag model.FeatureFlag) error 
 
 func (s *Service) UpdateFlag(ctx context.Context, flag model.FeatureFlag) error {
 	if err := s.store.UpdateFlag(ctx, flag); err != nil {
-		if errors.Is(err, ErrNotFound) {
-			return ErrNotFound
+		if errors.Is(err, model.ErrNotFound) {
+			return model.ErrNotFound
 		}
 		return fmt.Errorf("failed to update flag: %w", err)
 	}
@@ -69,8 +66,8 @@ func (s *Service) UpdateFlag(ctx context.Context, flag model.FeatureFlag) error 
 
 func (s *Service) DeleteFlag(ctx context.Context, id uuid.UUID) error {
 	if err := s.store.DeleteFlag(ctx, id); err != nil {
-		if errors.Is(err, ErrNotFound) {
-			return ErrNotFound
+		if errors.Is(err, model.ErrNotFound) {
+			return model.ErrNotFound
 		}
 		return fmt.Errorf("failed to delete flag: %w", err)
 	}

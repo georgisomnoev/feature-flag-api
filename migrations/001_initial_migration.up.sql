@@ -17,4 +17,13 @@ INSERT INTO users (username, password, role) VALUES
 ('uncle_bob', '$2a$12$FHTITVO0Gz4xoTqsvUXIP.srslqQNqdQK5NaOuzg0yS9TkRfaA9G2', 'editor')
 ON CONFLICT (username) DO NOTHING;
 
+CREATE TABLE IF NOT EXISTS feature_flags (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    key TEXT NOT NULL,
+    description TEXT NOT NULL,
+    enabled BOOLEAN NOT NULL,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
 COMMIT;

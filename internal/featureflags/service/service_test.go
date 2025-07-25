@@ -95,11 +95,11 @@ var _ = Describe("Service", func() {
 
 		Context("when the store returns not found", func() {
 			BeforeEach(func() {
-				store.GetFlagByIDReturns(model.FeatureFlag{}, service.ErrNotFound)
+				store.GetFlagByIDReturns(model.FeatureFlag{}, model.ErrNotFound)
 			})
 
 			It("returns the not found error", func() {
-				Expect(errAction).To(MatchError(service.ErrNotFound))
+				Expect(errAction).To(MatchError(model.ErrNotFound))
 			})
 		})
 
@@ -173,11 +173,11 @@ var _ = Describe("Service", func() {
 
 		Context("when the flag does not exist", func() {
 			BeforeEach(func() {
-				store.UpdateFlagReturns(service.ErrNotFound)
+				store.UpdateFlagReturns(model.ErrNotFound)
 			})
 
 			It("returns the not found error", func() {
-				Expect(errAction).To(MatchError(service.ErrNotFound))
+				Expect(errAction).To(MatchError(model.ErrNotFound))
 			})
 		})
 
@@ -214,11 +214,11 @@ var _ = Describe("Service", func() {
 
 		Context("when the flag does not exist", func() {
 			BeforeEach(func() {
-				store.DeleteFlagReturns(service.ErrNotFound)
+				store.DeleteFlagReturns(model.ErrNotFound)
 			})
 
 			It("returns the not found error", func() {
-				Expect(errAction).To(MatchError(service.ErrNotFound))
+				Expect(errAction).To(MatchError(model.ErrNotFound))
 			})
 		})
 

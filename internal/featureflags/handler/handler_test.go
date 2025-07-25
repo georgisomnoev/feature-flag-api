@@ -15,7 +15,6 @@ import (
 	"github.com/georgisomnoev/feature-flag-api/internal/featureflags/handler"
 	"github.com/georgisomnoev/feature-flag-api/internal/featureflags/handler/handlerfakes"
 	"github.com/georgisomnoev/feature-flag-api/internal/featureflags/model"
-	"github.com/georgisomnoev/feature-flag-api/internal/featureflags/service"
 	"github.com/georgisomnoev/feature-flag-api/internal/validator"
 	"github.com/labstack/echo/v4"
 )
@@ -212,7 +211,7 @@ var _ = Describe("Handler", func() {
 
 		Context("when the feature flag is not found", func() {
 			BeforeEach(func() {
-				svc.GetFlagByIDReturns(model.FeatureFlag{}, service.ErrNotFound)
+				svc.GetFlagByIDReturns(model.FeatureFlag{}, model.ErrNotFound)
 			})
 
 			It("returns a not found error", func() {
@@ -291,13 +290,13 @@ var _ = Describe("Handler", func() {
 
 		Context("when the flag is not found", func() {
 			BeforeEach(func() {
-				svc.UpdateFlagReturns(service.ErrNotFound)
+				svc.UpdateFlagReturns(model.ErrNotFound)
 			})
 
 			It("returns not found error", func() {
 				e.ServeHTTP(recorder, request)
 				Expect(recorder.Code).To(Equal(http.StatusNotFound))
-				Expect(recorder.Body.String()).To(ContainSubstring(service.ErrNotFound.Error()))
+				Expect(recorder.Body.String()).To(ContainSubstring(model.ErrNotFound.Error()))
 			})
 		})
 
@@ -334,7 +333,7 @@ var _ = Describe("Handler", func() {
 
 		Context("when the flag is not found", func() {
 			BeforeEach(func() {
-				svc.DeleteFlagReturns(service.ErrNotFound)
+				svc.DeleteFlagReturns(model.ErrNotFound)
 			})
 
 			It("returns not found error", func() {

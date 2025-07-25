@@ -7,7 +7,6 @@ import (
 	"time"
 
 	"github.com/georgisomnoev/feature-flag-api/internal/featureflags/model"
-	"github.com/georgisomnoev/feature-flag-api/internal/featureflags/service"
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/google/uuid"
 	"github.com/labstack/echo/v4"
@@ -90,7 +89,7 @@ func (h *Handler) getFlagByID(c echo.Context) error {
 
 	flag, err := h.svc.GetFlagByID(c.Request().Context(), flagID)
 	if err != nil {
-		if errors.Is(err, service.ErrNotFound) {
+		if errors.Is(err, model.ErrNotFound) {
 			return echo.NewHTTPError(http.StatusNotFound, "feature flag not found")
 		}
 		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
@@ -146,7 +145,7 @@ func (h *Handler) updateFlag(c echo.Context) error {
 	}
 
 	if err := h.svc.UpdateFlag(c.Request().Context(), flag); err != nil {
-		if errors.Is(err, service.ErrNotFound) {
+		if errors.Is(err, model.ErrNotFound) {
 			return echo.NewHTTPError(http.StatusNotFound, "feature flag not found")
 		}
 		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
@@ -162,7 +161,7 @@ func (h *Handler) deleteFlag(c echo.Context) error {
 	}
 
 	if err := h.svc.DeleteFlag(c.Request().Context(), flagID); err != nil {
-		if errors.Is(err, service.ErrNotFound) {
+		if errors.Is(err, model.ErrNotFound) {
 			return echo.NewHTTPError(http.StatusNotFound, "feature flag not found")
 		}
 		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
