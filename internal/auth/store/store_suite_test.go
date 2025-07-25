@@ -18,7 +18,7 @@ var (
 
 func TestStore(t *testing.T) {
 	RegisterFailHandler(Fail)
-	RunSpecs(t, "Store Suite")
+	RunSpecs(t, "Auth Store Suite")
 }
 
 var _ = BeforeSuite(func() {

@@ -9,5 +9,5 @@ import (
 
 func TestService(t *testing.T) {
 	RegisterFailHandler(Fail)
-	RunSpecs(t, "Auth Service Suite")
+	RunSpecs(t, "Feature Flags Service Suite")
 }
