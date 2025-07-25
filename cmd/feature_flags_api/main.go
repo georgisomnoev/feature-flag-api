@@ -1,7 +1,6 @@
 package main
 
 import (
-	"context"
 	"fmt"
 	"sync"
 
@@ -9,12 +8,13 @@ import (
 	"github.com/georgisomnoev/feature-flag-api/internal/config"
 	"github.com/georgisomnoev/feature-flag-api/internal/featureflags"
 	"github.com/georgisomnoev/feature-flag-api/internal/jwthelper"
+	"github.com/georgisomnoev/feature-flag-api/internal/lifecycle"
 	"github.com/georgisomnoev/feature-flag-api/internal/pg"
 	"github.com/georgisomnoev/feature-flag-api/internal/webapi"
 )
 
 func main() {
-	appCtx := context.Background()
+	appCtx := lifecycle.CreateAppContext()
 	wg := &sync.WaitGroup{}
 
 	cfg := config.Load()
@@ -42,8 +42,8 @@ func main() {
 		panic(fmt.Errorf("failed initializing JWT helper: %w", err))
 	}
 
-	authStore := auth.Process(appCtx, pool, srv, jwtHelper)
-	featureflags.Process(appCtx, pool, srv, authStore, jwtHelper)
+	authStore := auth.Process(pool, srv, jwtHelper)
+	featureflags.Process(pool, srv, authStore, jwtHelper)
 
 	tlsCfg := &webapi.TLSConfig{
 		CertFile: cfg.WebAPICertPath,

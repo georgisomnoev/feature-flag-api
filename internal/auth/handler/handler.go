@@ -16,30 +16,27 @@ type Service interface {
 	Authenticate(context.Context, string, string) (string, error)
 }
 
-func RegisterHandlers(ctx context.Context, srv *echo.Echo, svc Service) {
-	srv.POST("/auth", handleAuthenticion(ctx, svc))
+func RegisterHandlers(srv *echo.Echo, svc Service) {
+	srv.POST("/auth", authenticateHandler(svc))
 }
 
-func handleAuthenticion(ctx context.Context, svc Service) func(c echo.Context) error {
+func authenticateHandler(svc Service) echo.HandlerFunc {
 	return func(c echo.Context) error {
 		var req model.AuthRequest
 		if err := c.Bind(&req); err != nil {
-			return c.JSON(http.StatusBadRequest, map[string]string{
-				"message": "invalid request",
-			})
+			return echo.NewHTTPError(http.StatusBadRequest, "invalid request body")
 		}
 
-		token, err := svc.Authenticate(ctx, req.Username, req.Password)
+		if req.Username == "" || req.Password == "" {
+			return echo.NewHTTPError(http.StatusBadRequest, "username and password are required")
+		}
+
+		token, err := svc.Authenticate(c.Request().Context(), req.Username, req.Password)
 		if err != nil {
 			if errors.Is(err, service.ErrInvalidCredentials) {
-				return c.JSON(http.StatusUnauthorized, map[string]string{
-					"message": "invalid credentials",
-				})
+				return echo.NewHTTPError(http.StatusUnauthorized, "invalid credentials")
 			}
-			return c.JSON(http.StatusInternalServerError, map[string]string{
-				"message": "an error occurred while processing your request",
-				"error":   err.Error(),
-			})
+			return echo.NewHTTPError(http.StatusInternalServerError, "failed to authenticate user")
 		}
 
 		return c.JSON(http.StatusOK, model.AuthResponse{Token: token})

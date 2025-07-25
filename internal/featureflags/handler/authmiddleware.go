@@ -11,7 +11,7 @@ import (
 	"github.com/labstack/echo/v4"
 )
 
-func CreateAuthMiddleware(ctx context.Context, authStore AuthStore, jwtHelper JWTHelper) echo.MiddlewareFunc {
+func createAuthMiddleware(authStore AuthStore, jwtHelper JWTHelper) echo.MiddlewareFunc {
 	return func(next echo.HandlerFunc) echo.HandlerFunc {
 		return func(c echo.Context) error {
 			token, err := extractToken(c)
@@ -23,7 +23,7 @@ func CreateAuthMiddleware(ctx context.Context, authStore AuthStore, jwtHelper JW
 			if err != nil {
 				return echo.NewHTTPError(http.StatusUnauthorized, "invalid or expired token")
 			}
-			if err := validateTokenClaims(ctx, c, claims, authStore); err != nil {
+			if err := validateTokenClaims(c.Request().Context(), c, claims, authStore); err != nil {
 				return err
 			}
 

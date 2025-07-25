@@ -2,7 +2,6 @@ package handler_test
 
 import (
 	"bytes"
-	"context"
 	"encoding/json"
 	"errors"
 	"net/http"
@@ -17,23 +16,21 @@ import (
 	. "github.com/onsi/gomega"
 )
 
-var ErrAuthFailed = errors.New("authentication failed")
+var ErrUnexpectedError = errors.New("unexpected error")
 
 var _ = Describe("Authentication Handler", func() {
 	var (
 		e           *echo.Echo
-		ctx         context.Context
 		recorder    *httptest.ResponseRecorder
 		authService *handlerfakes.FakeService
 	)
 
 	BeforeEach(func() {
 		e = echo.New()
-		ctx = context.Background()
 		recorder = httptest.NewRecorder()
 		authService = &handlerfakes.FakeService{}
 
-		handler.RegisterHandlers(ctx, e, authService)
+		handler.RegisterHandlers(e, authService)
 	})
 
 	Describe("POST /auth", func() {
@@ -66,13 +63,13 @@ var _ = Describe("Authentication Handler", func() {
 			Expect(authService.AuthenticateCallCount()).To(Equal(1))
 
 			actualCtx, actualUsername, actualPassword := authService.AuthenticateArgsForCall(0)
-			Expect(actualCtx).To(Equal(ctx))
+			Expect(actualCtx).NotTo(BeNil())
 			Expect(actualUsername).To(Equal(credentials.Username))
 			Expect(actualPassword).To(Equal(credentials.Password))
 
 			var response model.AuthResponse
 			err := json.Unmarshal(recorder.Body.Bytes(), &response)
-			Expect(err).ToNot(HaveOccurred())
+			Expect(err).NotTo(HaveOccurred())
 			Expect(response.Token).To(Equal(token))
 		})
 
@@ -84,6 +81,55 @@ var _ = Describe("Authentication Handler", func() {
 
 			It("returns 400", func() {
 				Expect(recorder.Code).To(Equal(http.StatusBadRequest))
+
+				var response map[string]string
+				err := json.Unmarshal(recorder.Body.Bytes(), &response)
+				Expect(err).NotTo(HaveOccurred())
+				Expect(response["message"]).To(Equal("invalid request body"))
+			})
+		})
+
+		When("the username or password is missing", func() {
+			When("the username is missing", func() {
+				BeforeEach(func() {
+					credentials = model.AuthRequest{
+						Username: "",
+						Password: "testpass",
+					}
+					body, _ := json.Marshal(credentials)
+					req = httptest.NewRequest(http.MethodPost, "/auth", bytes.NewReader(body))
+					req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
+				})
+
+				It("returns 400", func() {
+					Expect(recorder.Code).To(Equal(http.StatusBadRequest))
+
+					var response map[string]string
+					err := json.Unmarshal(recorder.Body.Bytes(), &response)
+					Expect(err).NotTo(HaveOccurred())
+					Expect(response["message"]).To(Equal("username and password are required"))
+				})
+			})
+
+			When("the password is missing", func() {
+				BeforeEach(func() {
+					credentials = model.AuthRequest{
+						Username: "testuser",
+						Password: "",
+					}
+					body, _ := json.Marshal(credentials)
+					req = httptest.NewRequest(http.MethodPost, "/auth", bytes.NewReader(body))
+					req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
+				})
+
+				It("returns 400", func() {
+					Expect(recorder.Code).To(Equal(http.StatusBadRequest))
+
+					var response map[string]string
+					err := json.Unmarshal(recorder.Body.Bytes(), &response)
+					Expect(err).NotTo(HaveOccurred())
+					Expect(response["message"]).To(Equal("username and password are required"))
+				})
 			})
 		})
 
@@ -94,25 +140,26 @@ var _ = Describe("Authentication Handler", func() {
 
 			It("returns 401", func() {
 				Expect(recorder.Code).To(Equal(http.StatusUnauthorized))
+
 				var response map[string]string
 				err := json.Unmarshal(recorder.Body.Bytes(), &response)
-				Expect(err).ToNot(HaveOccurred())
+				Expect(err).NotTo(HaveOccurred())
 				Expect(response["message"]).To(Equal("invalid credentials"))
 			})
 		})
 
 		When("authentication fails due to an unexpected error", func() {
 			BeforeEach(func() {
-				authService.AuthenticateReturns("", ErrAuthFailed)
+				authService.AuthenticateReturns("", ErrUnexpectedError)
 			})
 
 			It("returns 500", func() {
 				Expect(recorder.Code).To(Equal(http.StatusInternalServerError))
+
 				var response map[string]string
 				err := json.Unmarshal(recorder.Body.Bytes(), &response)
-				Expect(err).ToNot(HaveOccurred())
-				Expect(response["message"]).To(Equal("an error occurred while processing your request"))
-				Expect(response["error"]).To(Equal(ErrAuthFailed.Error()))
+				Expect(err).NotTo(HaveOccurred())
+				Expect(response["message"]).To(Equal("failed to authenticate user"))
 			})
 		})
 	})

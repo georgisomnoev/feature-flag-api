@@ -30,13 +30,12 @@ type Service interface {
 }
 
 func RegisterHandlers(
-	ctx context.Context,
 	srv *echo.Echo,
 	authStore AuthStore,
 	jwtHelper JWTHelper,
 	svc Service,
 ) {
-	authMiddleware := CreateAuthMiddleware(ctx, authStore, jwtHelper)
+	authMiddleware := createAuthMiddleware(authStore, jwtHelper)
 
 	editorGroup := srv.Group("/flags")
 	editorGroup.Use(func(next echo.HandlerFunc) echo.HandlerFunc {

@@ -32,7 +32,7 @@ var _ = Describe("Auth Integration Test", func() {
 		jwtHelper, err := jwthelper.NewJWTHelper(jwtPrivateKey, jwtPublicKey)
 		Expect(err).ToNot(HaveOccurred())
 
-		authStore = auth.Process(ctx, pool, e, jwtHelper)
+		authStore = auth.Process(pool, e, jwtHelper)
 		Expect(authStore).ToNot(BeNil())
 
 		srv = httptest.NewServer(e)
