@@ -32,10 +32,16 @@ make run-app
 ```
 
 ## How to run the tests
-To run all the tests:
+To run the unit tests:
 
 ```bash
-make test
+make test-unit
+```
+
+To run the integration tests:
+
+```bash
+make test-integration
 ```
 
 ## Example requests

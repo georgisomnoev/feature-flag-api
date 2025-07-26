@@ -6,9 +6,17 @@ tidy:
 vendor:
 	go mod vendor
 
-.PHONY: test
-test:
-	ginkgo run -race ./...
+.PHONY: test-unit
+test-unit:
+	ginkgo run -race --label-filter '!/./' ./...
+
+.PHONY: test-integration
+test-integration:
+	ginkgo run -race --label-filter '/./' ./...
+
+.PHONY: lint
+lint:
+	golangci-lint run
 
 .PHONY: generate
 generate:

@@ -23,7 +23,7 @@ import (
 	. "github.com/onsi/gomega"
 )
 
-var _ = Describe("Feature Flags Integration Test", func() {
+var _ = Describe("Feature Flags Integration Test", Label("integration"), func() {
 	var (
 		token               string
 		userID              uuid.UUID

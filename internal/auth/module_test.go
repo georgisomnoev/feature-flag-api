@@ -18,7 +18,7 @@ import (
 	. "github.com/onsi/gomega"
 )
 
-var _ = Describe("Auth Integration Test", func() {
+var _ = Describe("Auth Integration Test", Label("integration"), func() {
 	var (
 		srv       *httptest.Server
 		authStore *store.Store
