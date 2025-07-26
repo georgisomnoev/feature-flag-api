@@ -81,3 +81,53 @@ curl -X POST https://127.0.0.1:8443/auth \
 
 Note: Use the generated token as a Bearer token in the Authorization header when calling the feature flag endpoints.
 
+### View Feature Flags (Read Access)
+
+#### Get all feature flags:
+```bash
+curl -X GET https://127.0.0.1:8443/flags \
+  -H "Authorization: Bearer <TOKEN>" \
+  -k
+```
+
+#### Get a single feature flag by ID:
+```bash
+curl -X GET https://127.0.0.1:8443/flags/<ID> \
+  -H "Authorization: Bearer <TOKEN>" \
+  -k
+```
+
+### Manage Feature Flags (Write Access)
+
+#### Create a new feature flag:
+```bash
+curl -X POST https://127.0.0.1:8443/flags \
+  -H "Authorization: Bearer <TOKEN>" \
+  -H "Content-Type: application/json" \
+  -k \
+  -d '{
+    "key": "new_feature_flag",
+    "enabled": true,
+    "description": "Description of the new feature flag"
+  }'
+```
+
+#### Update an existing feature flag:
+```bash
+curl -X PUT https://127.0.0.1:8443/flags/<ID> \
+  -H "Authorization: Bearer <TOKEN>" \
+  -H "Content-Type: application/json" \
+  -k \
+  -d '{
+    "key": "updated_feature_flag",
+    "enabled": false,
+    "description": "Updated description"
+  }'
+```
+
+#### Delete a feature flag:
+```bash
+curl -X DELETE https://127.0.0.1:8443/flags/<ID> \
+  -H "Authorization: Bearer <TOKEN>" \
+  -k
+```
