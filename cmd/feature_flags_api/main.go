@@ -2,22 +2,27 @@ package main
 
 import (
 	"fmt"
-	"sync"
 
 	"github.com/georgisomnoev/feature-flag-api/internal/auth"
 	"github.com/georgisomnoev/feature-flag-api/internal/config"
 	"github.com/georgisomnoev/feature-flag-api/internal/featureflags"
 	"github.com/georgisomnoev/feature-flag-api/internal/jwthelper"
 	"github.com/georgisomnoev/feature-flag-api/internal/lifecycle"
+	"github.com/georgisomnoev/feature-flag-api/internal/observability"
 	"github.com/georgisomnoev/feature-flag-api/internal/pg"
 	"github.com/georgisomnoev/feature-flag-api/internal/webapi"
 )
 
 func main() {
 	appCtx := lifecycle.CreateAppContext()
-	wg := &sync.WaitGroup{}
 
 	cfg := config.Load()
+
+	if cfg.OtelCollectorHost != "" {
+		if err := observability.InitOtel(appCtx, cfg.OtelCollectorHost, "feature-flags-api"); err != nil {
+			panic(fmt.Errorf("failed initializing Otel: %w", err))
+		}
+	}
 
 	srv := webapi.NewWebAPI()
 
@@ -49,7 +54,5 @@ func main() {
 		CertFile: cfg.WebAPICertPath,
 		KeyFile:  cfg.WebAPIKeyPath,
 	}
-	webapi.Start(appCtx, wg, srv, cfg.APIPort, tlsCfg)
-
-	wg.Wait()
+	webapi.Start(appCtx, srv, cfg.APIPort, tlsCfg)
 }

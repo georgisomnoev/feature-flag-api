@@ -14,6 +14,7 @@ type Service struct {
 }
 
 //go:generate go run github.com/maxbrunsfeld/counterfeiter/v6 -generate
+//go:generate gowrap gen -g -p ./ -i Store -t ../../observability/templates/otel_trace.tmpl -o ./wrapped/trace/store.go
 //counterfeiter:generate . Store
 type Store interface {
 	ListFlags(ctx context.Context) ([]model.FeatureFlag, error)

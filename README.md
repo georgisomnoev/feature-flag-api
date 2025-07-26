@@ -25,10 +25,10 @@ Generate server certificates and jwt keys:
 make generate-certs-and-keys
 ```
 
-## How to run the server
-To run the server using docker:
+## How to run the app
+To run the app with docker:
 ```bash
-make run-docker
+make run-app
 ```
 
 ## How to run the tests

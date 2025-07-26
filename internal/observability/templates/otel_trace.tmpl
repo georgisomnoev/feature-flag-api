@@ -1,0 +1,48 @@
+import (
+    "context"
+
+    _codes "go.opentelemetry.io/otel/codes"
+    "go.opentelemetry.io/otel"
+    "go.opentelemetry.io/otel/attribute"
+    "go.opentelemetry.io/otel/trace"
+)
+
+{{ $decorator := (or .Vars.DecoratorName (printf "%sWithTracing" .Interface.Name)) }}
+{{ $spanNameType := (or .Vars.SpanNamePrefix .Interface.Name) }}
+
+// {{$decorator}} implements {{.Interface.Name}} interface instrumented with open telemetry spans
+type {{$decorator}} struct {
+  {{.Interface.Type}}
+  tracer trace.Tracer
+}
+
+// New{{$decorator}} returns {{$decorator}}
+func New{{$decorator}} (base {{.Interface.Type}}) {{$decorator}} {
+    d := {{$decorator}} {
+        {{.Interface.Name}}: base,
+        tracer: otel.GetTracerProvider().Tracer(""),
+    }
+
+  return d
+}
+
+{{range $method := .Interface.Methods}}
+  {{if $method.AcceptsContext}}
+    // {{$method.Name}} implements {{$.Interface.Name}}
+func (_d {{$decorator}}) {{$method.Declaration}} {
+  ctx, _span := _d.tracer.Start(ctx, "{{$spanNameType}}.{{$method.Name}}")
+  defer func() {
+    if err != nil {
+      _span.RecordError(err)
+      _span.SetStatus(_codes.Error, err.Error())
+      _span.SetAttributes(
+        attribute.String("event", "error"),
+        attribute.String("message", err.Error()),
+      )
+    }
+    _span.End()
+  }()
+  {{$method.Pass (printf "_d.%s." $.Interface.Name) }}
+}
+  {{end}}
+{{end}}

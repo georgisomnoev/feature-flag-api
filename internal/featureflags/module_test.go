@@ -195,6 +195,7 @@ var _ = Describe("Feature Flags Integration Test", func() {
 			})
 		})
 
+		// TODO: Fix me!
 		Context("Delete Feature Flag", func() {
 			It("deletes the feature flag", func() {
 				req, err := http.NewRequest(http.MethodDelete, fmt.Sprintf("%s/flags/%s", srv.URL, testFlag.ID), nil)

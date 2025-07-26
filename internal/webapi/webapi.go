@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"net/http"
-	"sync"
 	"time"
 
 	"github.com/georgisomnoev/feature-flag-api/internal/validator"
@@ -36,11 +35,8 @@ func NewWebAPI() *echo.Echo {
 	return e
 }
 
-func Start(ctx context.Context, wg *sync.WaitGroup, e *echo.Echo, apiPort string, tlsConfig *TLSConfig) {
-	wg.Add(1)
+func Start(ctx context.Context, e *echo.Echo, apiPort string, tlsConfig *TLSConfig) {
 	go func() {
-		defer wg.Done()
-
 		e.Logger.Infof("starting the WebAPI server on port: %s", apiPort)
 		addr := fmt.Sprintf(":%s", apiPort)
 		if err := e.StartTLS(addr, tlsConfig.CertFile, tlsConfig.KeyFile); err != nil && err != http.ErrServerClosed {

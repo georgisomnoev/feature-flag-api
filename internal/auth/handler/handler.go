@@ -11,6 +11,7 @@ import (
 )
 
 //go:generate go run github.com/maxbrunsfeld/counterfeiter/v6 -generate
+//go:generate gowrap gen -g -p ./ -i Service -t ../../observability/templates/otel_trace.tmpl -o ./wrapped/trace/service.go
 //counterfeiter:generate . Service
 type Service interface {
 	Authenticate(context.Context, string, string) (string, error)

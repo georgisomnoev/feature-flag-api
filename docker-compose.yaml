@@ -5,8 +5,8 @@ services:
       context: ./
       dockerfile: Dockerfile
     depends_on:
-      featureflagsdb:
-        condition: service_healthy 
+      migratedb:
+        condition: service_completed_successfully 
     ports:
       - "8443:8443" 
     env_file:
@@ -36,5 +36,9 @@ services:
       interval: 1s
       timeout: 1s
       retries: 30
+  otel-collector:
+    image: "otel/opentelemetry-collector:latest"
+    ports:
+      - "4317:4317"
 volumes:
   pgdata:

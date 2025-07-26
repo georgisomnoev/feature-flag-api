@@ -13,6 +13,8 @@ type Config struct {
 	WebAPICertPath string
 	WebAPIKeyPath  string
 
+	OtelCollectorHost string
+
 	JWTPrivateKeyPath string
 	JWTPublicKeyPath  string
 
@@ -29,6 +31,7 @@ func Load() *Config {
 		APIPort:           getEnv("API_PORT", "8443"),
 		WebAPICertPath:    getEnv("WEB_API_CERT_FILE", "certs/server/server.crt"),
 		WebAPIKeyPath:     getEnv("WEB_API_KEY_FILE", "certs/server/server.key"),
+		OtelCollectorHost: getEnv("OTEL_COLLECTOR_HOST", ""),
 		JWTPrivateKeyPath: getEnv("JWT_PRIVATE_KEY_PATH", "certs/jwt_keys/private.pem"),
 		JWTPublicKeyPath:  getEnv("JWT_PUBLIC_KEY_PATH", "certs/jwt_keys/public.pem"),
 		DBConnectionURL:   getEnv("DB_CONNECTION_URL", "postgres://ffuser:ffpass@featureflagsdb:5432/featureflagsdb"),

@@ -14,8 +14,14 @@ test:
 generate:
 	go generate ./...
 
-.PHONY: run-docker
-run-docker:
+.PHONY: run-app
+run-app:
+	docker compose down -v --remove-orphans 
+	docker compose up --build featureflagsapi featureflagsdb migratedb
+
+.PHONY: run-app-with-otel
+run-app-with-otel:
+	OTEL_COLLECTOR_HOST="otel-collector:4317" \
 	docker compose down -v --remove-orphans 
 	docker compose up --build
 
