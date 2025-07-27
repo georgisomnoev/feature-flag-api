@@ -50,3 +50,9 @@ jobs:
         run: |
           docker build -t feature-flag-api:ci .
 
+      - name: Clean up resources
+        if: always()
+        run: |
+          rm -f .env
+          docker system prune -af --volumes
+
