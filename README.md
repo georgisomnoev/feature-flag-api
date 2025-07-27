@@ -34,7 +34,7 @@ make vendor
 ```bash
 make generate-certs-and-keys
 ```
-- Create an `.env` file. Feel free to use the `.env.example`.
+- Create a `.env` file. Feel free to use the `.env.example`.
 
 ## How to run the app
 To run the app with docker:
@@ -143,7 +143,8 @@ curl -X DELETE https://127.0.0.1:8443/flags/<ID> \
   -k
 ```
 
-## Nice to add:
+## Future Enhancements:
 - Token refresh functionality
+- Depending on the environment, the app's web API communication could use just `http`.
 
 Feedback and questions are welcome!
