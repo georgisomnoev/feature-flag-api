@@ -13,7 +13,7 @@ The project is built using:
 - [Migrate](https://github.com/golang-migrate/migrate/) for managing DB migrations.
 
 ## Prerequsites
-- Go (v1.20+)
+- Go (v1.24 was used during development)
 - Ginkgo CLI (for running the tests)
 
 Before running the app please download the dependencies:
@@ -131,3 +131,8 @@ curl -X DELETE https://127.0.0.1:8443/flags/<ID> \
   -H "Authorization: Bearer <TOKEN>" \
   -k
 ```
+
+## Nice to add:
+- Token refresh functionality
+
+Feedback and questions are welcome!

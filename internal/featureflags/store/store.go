@@ -56,9 +56,9 @@ func (s *Store) GetFlagByID(ctx context.Context, id uuid.UUID) (model.FeatureFla
 }
 
 func (s *Store) CreateFlag(ctx context.Context, flag model.FeatureFlag) error {
-	query := fmt.Sprintf(`INSERT INTO %s (id, key, description, enabled, created_at, updated_at) 
-		VALUES ($1, $2, $3, $4, $5, $6)`, FeatureFlagsTable)
-	_, err := s.pool.Exec(ctx, query, flag.ID, flag.Key, flag.Description, flag.Enabled, flag.CreatedAt, flag.UpdatedAt)
+	query := fmt.Sprintf(`INSERT INTO %s (id, key, description, enabled) 
+		VALUES ($1, $2, $3, $4)`, FeatureFlagsTable)
+	_, err := s.pool.Exec(ctx, query, flag.ID, flag.Key, flag.Description, flag.Enabled)
 	if err != nil {
 		return fmt.Errorf("failed to create feature flag: %w", err)
 	}

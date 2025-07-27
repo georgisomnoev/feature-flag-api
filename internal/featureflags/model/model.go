@@ -31,5 +31,4 @@ type FeatureFlagResponse struct {
 	UpdatedAt   time.Time `json:"updated_at"`
 }
 
-// TODO: Do not like to store errors in model package, consider moving to store or other place.
 var ErrNotFound = errors.New("feature flag not found")

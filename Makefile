@@ -6,6 +6,10 @@ tidy:
 vendor:
 	go mod vendor
 
+.PHONY: test
+test:
+	ginkgo run -race ./...
+
 .PHONY: test-unit
 test-unit:
 	ginkgo run -race --label-filter '!/./' ./...

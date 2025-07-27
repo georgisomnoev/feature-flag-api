@@ -89,8 +89,8 @@ var _ = Describe("Feature Flags Integration Test", Label("integration"), func() 
 				Key:         "test-flag",
 				Description: "test description",
 				Enabled:     true,
-				CreatedAt:   time.Now(),
-				UpdatedAt:   time.Now(),
+				CreatedAt:   time.Now().UTC(),
+				UpdatedAt:   time.Now().UTC(),
 			}
 
 			err := featureFlagStore.CreateFlag(ctx, testFlag)
@@ -140,8 +140,8 @@ var _ = Describe("Feature Flags Integration Test", Label("integration"), func() 
 				Expect(flags[len(flags)-1].ID).To(Equal(testFlag.ID))
 				Expect(flags[len(flags)-1].Key).To(Equal(testFlag.Key))
 				Expect(flags[len(flags)-1].Description).To(Equal(testFlag.Description))
-				Expect(flags[len(flags)-1].CreatedAt).To(BeTemporally(">", time.Now()))
-				Expect(flags[len(flags)-1].UpdatedAt).To(BeTemporally(">", time.Now()))
+				Expect(flags[len(flags)-1].CreatedAt).To(BeTemporally("<", time.Now().UTC()))
+				Expect(flags[len(flags)-1].UpdatedAt).To(BeTemporally("<", time.Now().UTC()))
 
 			})
 		})
@@ -167,8 +167,8 @@ var _ = Describe("Feature Flags Integration Test", Label("integration"), func() 
 				Expect(flag.ID).To(Equal(testFlagID))
 				Expect(flag.Key).To(Equal(testFlag.Key))
 				Expect(flag.Description).To(Equal(testFlag.Description))
-				Expect(flag.CreatedAt).To(BeTemporally(">", time.Now()))
-				Expect(flag.UpdatedAt).To(BeTemporally(">", time.Now()))
+				Expect(flag.CreatedAt).To(BeTemporally("<", time.Now().UTC()))
+				Expect(flag.UpdatedAt).To(BeTemporally("<", time.Now().UTC()))
 			})
 		})
 

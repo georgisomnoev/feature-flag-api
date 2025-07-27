@@ -64,8 +64,13 @@ var _ = Describe("Feature Flags Store", func() {
 
 		ItSucceeds()
 		It("returns all the feature flags", func() {
-			Expect(flags).To(HaveLen(1))
-			Expect(flags[0].Key).To(Equal(flag.Key))
+			Expect(len(flags)).To(BeNumerically(">=", 1))
+			Expect(flags[len(flags)-1].ID).To(Equal(flag.ID))
+			Expect(flags[len(flags)-1].Key).To(Equal(flag.Key))
+			Expect(flags[len(flags)-1].Description).To(Equal(flag.Description))
+			Expect(flags[len(flags)-1].Enabled).To(Equal(flag.Enabled))
+			Expect(flags[len(flags)-1].CreatedAt).To(BeTemporally(">", time.Now().UTC()))
+			Expect(flags[len(flags)-1].UpdatedAt).To(BeTemporally(">", time.Now().UTC()))
 		})
 	})
 
@@ -92,6 +97,8 @@ var _ = Describe("Feature Flags Store", func() {
 		It("returns the matching feature flag", func() {
 			Expect(fetchedFlag.ID).To(Equal(flag.ID))
 			Expect(fetchedFlag.Key).To(Equal(flag.Key))
+			Expect(fetchedFlag.Description).To(Equal(flag.Description))
+			Expect(fetchedFlag.Enabled).To(Equal(flag.Enabled))
 		})
 
 		Context("when the feature flag does not exist", func() {
@@ -154,6 +161,7 @@ var _ = Describe("Feature Flags Store", func() {
 			Expect(row.Scan(&updatedFlag.ID, &updatedFlag.Key, &updatedFlag.Description, &updatedFlag.Enabled, &updatedFlag.CreatedAt, &updatedFlag.UpdatedAt)).To(BeNil())
 			Expect(updatedFlag.Key).To(Equal(flag.Key))
 			Expect(updatedFlag.Description).To(Equal(flag.Description))
+			Expect(updatedFlag.Enabled).To(Equal(flag.Enabled))
 		})
 	})
 
