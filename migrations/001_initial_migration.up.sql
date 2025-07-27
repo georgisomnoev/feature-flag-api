@@ -18,7 +18,7 @@ INSERT INTO users (username, password, role) VALUES
 ON CONFLICT (username) DO NOTHING;
 
 CREATE TABLE IF NOT EXISTS feature_flags (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    id UUID PRIMARY KEY NOT NULL,
     key TEXT NOT NULL,
     description TEXT NOT NULL,
     enabled BOOLEAN NOT NULL,

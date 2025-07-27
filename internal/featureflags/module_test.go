@@ -74,12 +74,18 @@ var _ = Describe("Feature Flags Integration Test", Label("integration"), func() 
 
 	Describe("Feature Flags API", func() {
 		var (
-			testFlag model.FeatureFlag
+			testFlag   model.FeatureFlag
+			testFlagID uuid.UUID
+			errAction  error
+
+			req  *http.Request
+			resp *http.Response
 		)
 
 		BeforeEach(func() {
+			testFlagID = uuid.New()
 			testFlag = model.FeatureFlag{
-				ID:          uuid.New(),
+				ID:          testFlagID,
 				Key:         "test-flag",
 				Description: "test description",
 				Enabled:     true,
@@ -96,116 +102,181 @@ var _ = Describe("Feature Flags Integration Test", Label("integration"), func() 
 			Expect(err).ToNot(HaveOccurred())
 		})
 
+		JustBeforeEach(func() {
+			resp, errAction = http.DefaultClient.Do(req)
+
+			DeferCleanup(func() {
+				if resp != nil {
+					resp.Body.Close()
+				}
+			})
+		})
+
+		ItSucceeds := func() {
+			It("succeeds", func() {
+				Expect(errAction).ToNot(HaveOccurred())
+			})
+		}
+
 		Context("List Feature Flags", func() {
-			It("returns all feature flags", func() {
-				req, err := http.NewRequest(http.MethodGet, srv.URL+"/flags", nil)
+			var (
+				err error
+			)
+
+			BeforeEach(func() {
+				req, err = http.NewRequest(http.MethodGet, srv.URL+"/flags", nil)
 				Expect(err).ToNot(HaveOccurred())
 				req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", token))
+			})
 
-				resp, err := http.DefaultClient.Do(req)
-				Expect(err).ToNot(HaveOccurred())
-				defer resp.Body.Close()
-
+			ItSucceeds()
+			It("returns the feature flag previously added", func() {
 				Expect(resp.StatusCode).To(Equal(http.StatusOK))
 
 				var flags []model.FeatureFlag
 				err = json.NewDecoder(resp.Body).Decode(&flags)
-				Expect(err).ToNot(HaveOccurred())
-				Expect(flags).To(HaveLen(1))
-				Expect(flags[0].Key).To(Equal("test-flag"))
+				Expect(err).NotTo(HaveOccurred())
+				Expect(len(flags)).To(BeNumerically(">=", 1))
+				Expect(flags[len(flags)-1].ID).To(Equal(testFlag.ID))
+				Expect(flags[len(flags)-1].Key).To(Equal(testFlag.Key))
+				Expect(flags[len(flags)-1].Description).To(Equal(testFlag.Description))
+				Expect(flags[len(flags)-1].CreatedAt).To(BeTemporally(">", time.Now()))
+				Expect(flags[len(flags)-1].UpdatedAt).To(BeTemporally(">", time.Now()))
+
 			})
 		})
 
 		Context("Get Feature Flag By ID", func() {
-			It("returns the feature flag", func() {
-				req, err := http.NewRequest(http.MethodGet, fmt.Sprintf("%s/flags/%s", srv.URL, testFlag.ID), nil)
+			var (
+				err error
+			)
+
+			BeforeEach(func() {
+				req, err = http.NewRequest(http.MethodGet, fmt.Sprintf("%s/flags/%s", srv.URL, testFlag.ID), nil)
 				Expect(err).ToNot(HaveOccurred())
 				req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", token))
+			})
 
-				resp, err := http.DefaultClient.Do(req)
-				Expect(err).ToNot(HaveOccurred())
-				defer resp.Body.Close()
-
+			ItSucceeds()
+			It("returns the feature flag", func() {
 				Expect(resp.StatusCode).To(Equal(http.StatusOK))
 
 				var flag model.FeatureFlag
 				err = json.NewDecoder(resp.Body).Decode(&flag)
 				Expect(err).ToNot(HaveOccurred())
-				Expect(flag.Key).To(Equal("test-flag"))
+				Expect(flag.ID).To(Equal(testFlagID))
+				Expect(flag.Key).To(Equal(testFlag.Key))
+				Expect(flag.Description).To(Equal(testFlag.Description))
+				Expect(flag.CreatedAt).To(BeTemporally(">", time.Now()))
+				Expect(flag.UpdatedAt).To(BeTemporally(">", time.Now()))
 			})
 		})
 
 		Context("Create New Feature Flag", func() {
 			var (
-				payload []byte
-				req     *http.Request
-				resp    *http.Response
-				err     error
+				generateFlagID uuid.UUID
 			)
 
 			BeforeEach(func() {
-				payload, err = json.Marshal(map[string]interface{}{
+				payload, err := json.Marshal(map[string]interface{}{
 					"key":         "new-flag",
 					"description": "new description",
 					"enabled":     true,
 				})
 				Expect(err).NotTo(HaveOccurred())
-			})
 
-			JustBeforeEach(func() {
 				req, err = http.NewRequest(http.MethodPost, fmt.Sprintf("%s/flags", srv.URL), bytes.NewBuffer(payload))
 				Expect(err).NotTo(HaveOccurred())
 				req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", token))
 				req.Header.Set("Content-Type", "application/json")
-				resp, err = http.DefaultClient.Do(req)
+			})
+
+			JustBeforeEach(func() {
+				Expect(resp.StatusCode).To(Equal(http.StatusCreated))
+
+				var response struct {
+					ID uuid.UUID `json:"id"`
+				}
+				var err = json.NewDecoder(resp.Body).Decode(&response)
 				Expect(err).NotTo(HaveOccurred())
+				generateFlagID = response.ID
 			})
 
 			JustAfterEach(func() {
-				// TODO: adjust to proper cleanup.
-				insertedFlag, err := featureFlagStore.GetFlagByKey(ctx, "new-flag")
-				Expect(err).ToNot(HaveOccurred())
-				err = featureFlagStore.DeleteFlag(ctx, insertedFlag.ID)
+				err := featureFlagStore.DeleteFlag(ctx, generateFlagID)
 				Expect(err).ToNot(HaveOccurred())
 			})
 
+			ItSucceeds()
 			It("creates the feature flag", func() {
 				Expect(resp.StatusCode).To(Equal(http.StatusCreated))
 			})
 		})
 
 		Context("Update Existing Feature Flag", func() {
-			It("updates the feature flag", func() {
-				payload, _ := json.Marshal(map[string]interface{}{
+			var (
+				payload     []byte
+				anotherFlag model.FeatureFlag
+			)
+
+			BeforeEach(func() {
+				anotherFlag = model.FeatureFlag{
+					ID:          uuid.New(),
+					Key:         testFlag.Key,
+					Description: testFlag.Description,
+					Enabled:     true,
+				}
+
+				err := featureFlagStore.CreateFlag(ctx, anotherFlag)
+				Expect(err).ToNot(HaveOccurred())
+
+				payload, err = json.Marshal(map[string]interface{}{
 					"key":         "updated-flag",
 					"description": "updated description",
 					"enabled":     false,
 				})
+				Expect(err).ToNot(HaveOccurred())
 
-				req, err := http.NewRequest(http.MethodPut, fmt.Sprintf("%s/flags/%s", srv.URL, testFlag.ID), bytes.NewBuffer(payload))
+				req, err = http.NewRequest(http.MethodPut, fmt.Sprintf("%s/flags/%s", srv.URL, anotherFlag.ID), bytes.NewBuffer(payload))
 				Expect(err).ToNot(HaveOccurred())
 				req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", token))
 				req.Header.Set("Content-Type", "application/json")
+			})
 
-				resp, err := http.DefaultClient.Do(req)
+			AfterEach(func() {
+				err := featureFlagStore.DeleteFlag(ctx, anotherFlag.ID)
 				Expect(err).ToNot(HaveOccurred())
-				defer resp.Body.Close()
+			})
 
+			ItSucceeds()
+			It("updates the feature flag", func() {
 				Expect(resp.StatusCode).To(Equal(http.StatusOK))
 			})
 		})
 
-		// TODO: Fix me!
 		Context("Delete Feature Flag", func() {
-			It("deletes the feature flag", func() {
-				req, err := http.NewRequest(http.MethodDelete, fmt.Sprintf("%s/flags/%s", srv.URL, testFlag.ID), nil)
+			var (
+				anotherFlag model.FeatureFlag
+			)
+
+			BeforeEach(func() {
+				anotherFlag = model.FeatureFlag{
+					ID:          uuid.New(),
+					Key:         testFlag.Key,
+					Description: testFlag.Description,
+					Enabled:     true,
+				}
+
+				err := featureFlagStore.CreateFlag(ctx, anotherFlag)
 				Expect(err).ToNot(HaveOccurred())
+
+				req, err = http.NewRequest(http.MethodDelete, fmt.Sprintf("%s/flags/%s", srv.URL, anotherFlag.ID), nil)
+				Expect(err).NotTo(HaveOccurred())
 				req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", token))
+			})
 
-				resp, err := http.DefaultClient.Do(req)
-				Expect(err).ToNot(HaveOccurred())
-				defer resp.Body.Close()
-
+			ItSucceeds()
+			It("deletes the feature flag", func() {
 				Expect(resp.StatusCode).To(Equal(http.StatusNoContent))
 			})
 		})

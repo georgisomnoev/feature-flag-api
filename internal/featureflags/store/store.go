@@ -66,8 +66,8 @@ func (s *Store) CreateFlag(ctx context.Context, flag model.FeatureFlag) error {
 }
 
 func (s *Store) UpdateFlag(ctx context.Context, flag model.FeatureFlag) error {
-	query := fmt.Sprintf(`UPDATE %s SET key = $1, description = $2, enabled = $3, updated_at = $4 WHERE id = $5`, FeatureFlagsTable)
-	result, err := s.pool.Exec(ctx, query, flag.Key, flag.Description, flag.Enabled, flag.UpdatedAt, flag.ID)
+	query := fmt.Sprintf(`UPDATE %s SET key = $1, description = $2, enabled = $3, updated_at = NOW() WHERE id = $4`, FeatureFlagsTable)
+	result, err := s.pool.Exec(ctx, query, flag.Key, flag.Description, flag.Enabled, flag.ID)
 	if err != nil {
 		return fmt.Errorf("failed to update feature flag: %w", err)
 	}
@@ -87,19 +87,4 @@ func (s *Store) DeleteFlag(ctx context.Context, id uuid.UUID) error {
 		return model.ErrNotFound
 	}
 	return nil
-}
-
-// TODO: Remove and adjust the create handler to return data.
-func (s *Store) GetFlagByKey(ctx context.Context, key string) (model.FeatureFlag, error) {
-	var flag model.FeatureFlag
-	query := fmt.Sprintf(`SELECT id, key, description, enabled, created_at, updated_at FROM %s WHERE key = $1`, FeatureFlagsTable)
-	err := s.pool.QueryRow(ctx, query, key).Scan(&flag.ID, &flag.Key, &flag.Description, &flag.Enabled, &flag.CreatedAt, &flag.UpdatedAt)
-	if err != nil {
-		if errors.Is(err, pgx.ErrNoRows) {
-			return model.FeatureFlag{}, model.ErrNotFound
-		}
-		return model.FeatureFlag{}, fmt.Errorf("failed to fetch feature flag: %w", err)
-	}
-
-	return flag, nil
 }

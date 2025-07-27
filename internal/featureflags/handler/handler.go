@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"net/http"
-	"time"
 
 	"github.com/georgisomnoev/feature-flag-api/internal/featureflags/model"
 	"github.com/golang-jwt/jwt/v5"
@@ -31,8 +30,8 @@ type Service interface {
 	ListFlags(context.Context) ([]model.FeatureFlag, error)
 	GetFlagByID(context.Context, uuid.UUID) (model.FeatureFlag, error)
 
-	CreateFlag(context.Context, model.FeatureFlag) error
-	UpdateFlag(context.Context, model.FeatureFlag) error
+	CreateFlag(context.Context, model.FeatureFlagRequest) (uuid.UUID, error)
+	UpdateFlag(context.Context, uuid.UUID, model.FeatureFlagRequest) error
 	DeleteFlag(context.Context, uuid.UUID) error
 }
 
@@ -110,20 +109,14 @@ func (h *Handler) createFlag(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
 	}
 
-	flag := model.FeatureFlag{
-		ID:          uuid.New(),
-		Key:         req.Key,
-		Description: req.Description,
-		Enabled:     req.Enabled,
-		CreatedAt:   time.Now(),
-		UpdatedAt:   time.Now(),
-	}
-
-	if err := h.svc.CreateFlag(c.Request().Context(), flag); err != nil {
+	flagID, err := h.svc.CreateFlag(c.Request().Context(), req)
+	if err != nil {
 		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 	}
 
-	return c.NoContent(http.StatusCreated)
+	return c.JSON(http.StatusCreated, map[string]interface{}{
+		"id": flagID,
+	})
 }
 
 func (h *Handler) updateFlag(c echo.Context) error {
@@ -140,15 +133,7 @@ func (h *Handler) updateFlag(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
 	}
 
-	flag := model.FeatureFlag{
-		ID:          flagID,
-		Key:         req.Key,
-		Description: req.Description,
-		Enabled:     req.Enabled,
-		UpdatedAt:   time.Now(),
-	}
-
-	if err := h.svc.UpdateFlag(c.Request().Context(), flag); err != nil {
+	if err := h.svc.UpdateFlag(c.Request().Context(), flagID, req); err != nil {
 		if errors.Is(err, model.ErrNotFound) {
 			return echo.NewHTTPError(http.StatusNotFound, "feature flag not found")
 		}

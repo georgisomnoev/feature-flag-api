@@ -34,7 +34,7 @@ func NewServiceWithTracing(base _sourceHandler.Service) ServiceWithTracing {
 }
 
 // CreateFlag implements Service
-func (_d ServiceWithTracing) CreateFlag(ctx context.Context, f1 model.FeatureFlag) (err error) {
+func (_d ServiceWithTracing) CreateFlag(ctx context.Context, f1 model.FeatureFlagRequest) (u1 uuid.UUID, err error) {
 	ctx, _span := _d.tracer.Start(ctx, "Service.CreateFlag")
 	defer func() {
 		if err != nil {
@@ -102,7 +102,7 @@ func (_d ServiceWithTracing) ListFlags(ctx context.Context) (fa1 []model.Feature
 }
 
 // UpdateFlag implements Service
-func (_d ServiceWithTracing) UpdateFlag(ctx context.Context, f1 model.FeatureFlag) (err error) {
+func (_d ServiceWithTracing) UpdateFlag(ctx context.Context, u1 uuid.UUID, f1 model.FeatureFlagRequest) (err error) {
 	ctx, _span := _d.tracer.Start(ctx, "Service.UpdateFlag")
 	defer func() {
 		if err != nil {
@@ -115,5 +115,5 @@ func (_d ServiceWithTracing) UpdateFlag(ctx context.Context, f1 model.FeatureFla
 		}
 		_span.End()
 	}()
-	return _d.Service.UpdateFlag(ctx, f1)
+	return _d.Service.UpdateFlag(ctx, u1, f1)
 }

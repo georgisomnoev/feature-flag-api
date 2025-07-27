@@ -22,6 +22,8 @@ var _ = Describe("Service", func() {
 		errAction error
 		svc       *service.Service
 		store     *servicefakes.FakeStore
+
+		flagID uuid.UUID
 	)
 
 	BeforeEach(func() {
@@ -73,7 +75,6 @@ var _ = Describe("Service", func() {
 	Describe("GetFlagByID", func() {
 		var (
 			featureFlag model.FeatureFlag
-			flagID      uuid.UUID
 		)
 
 		BeforeEach(func() {
@@ -116,16 +117,15 @@ var _ = Describe("Service", func() {
 
 	Describe("CreateFlag", func() {
 		var (
-			featureFlag model.FeatureFlag
+			featureFlagRequest model.FeatureFlagRequest
 		)
 
 		BeforeEach(func() {
-			featureFlag = model.FeatureFlag{Key: "new-flag", Description: "new description", Enabled: true}
-			store.CreateFlagReturns(nil)
+			featureFlagRequest = model.FeatureFlagRequest{Key: "new-flag", Description: "new description", Enabled: true}
 		})
 
 		JustBeforeEach(func() {
-			errAction = svc.CreateFlag(ctx, featureFlag)
+			flagID, errAction = svc.CreateFlag(ctx, featureFlagRequest)
 		})
 
 		ItSucceeds()
@@ -133,8 +133,9 @@ var _ = Describe("Service", func() {
 			Expect(store.CreateFlagCallCount()).To(Equal(1))
 			actualCtx, actualFlag := store.CreateFlagArgsForCall(0)
 			Expect(actualCtx).To(Equal(ctx))
-			Expect(actualFlag.Key).To(Equal(featureFlag.Key))
-			Expect(actualFlag.Description).To(Equal(featureFlag.Description))
+			Expect(actualFlag.ID).To(Equal(flagID))
+			Expect(actualFlag.Key).To(Equal(featureFlagRequest.Key))
+			Expect(actualFlag.Description).To(Equal(featureFlagRequest.Description))
 		})
 
 		Context("when the store returns an error", func() {
@@ -150,16 +151,17 @@ var _ = Describe("Service", func() {
 
 	Describe("UpdateFlag", func() {
 		var (
-			featureFlag model.FeatureFlag
+			featureFlagRequest model.FeatureFlagRequest
+			newUUID            uuid.UUID
 		)
 
 		BeforeEach(func() {
-			featureFlag = model.FeatureFlag{ID: uuid.New(), Key: "updated-flag", Description: "updated description", Enabled: false}
+			featureFlagRequest = model.FeatureFlagRequest{Key: "updated-flag", Description: "updated description", Enabled: false}
 			store.UpdateFlagReturns(nil)
 		})
 
 		JustBeforeEach(func() {
-			errAction = svc.UpdateFlag(ctx, featureFlag)
+			errAction = svc.UpdateFlag(ctx, newUUID, featureFlagRequest)
 		})
 
 		ItSucceeds()
@@ -167,8 +169,10 @@ var _ = Describe("Service", func() {
 			Expect(store.UpdateFlagCallCount()).To(Equal(1))
 			actualCtx, actualFlag := store.UpdateFlagArgsForCall(0)
 			Expect(actualCtx).To(Equal(ctx))
-			Expect(actualFlag.Key).To(Equal(featureFlag.Key))
-			Expect(actualFlag.Description).To(Equal(featureFlag.Description))
+			Expect(actualFlag.ID).To(Equal(newUUID))
+			Expect(actualFlag.Key).To(Equal(featureFlagRequest.Key))
+			Expect(actualFlag.Description).To(Equal(featureFlagRequest.Description))
+			Expect(actualFlag.Enabled).To(BeFalse())
 		})
 
 		Context("when the flag does not exist", func() {

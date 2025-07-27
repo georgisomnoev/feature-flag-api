@@ -48,15 +48,30 @@ func (s *Service) GetFlagByID(ctx context.Context, id uuid.UUID) (model.FeatureF
 	return flag, nil
 }
 
-func (s *Service) CreateFlag(ctx context.Context, flag model.FeatureFlag) error {
-	if err := s.store.CreateFlag(ctx, flag); err != nil {
-		return fmt.Errorf("failed to create flag: %w", err)
+func (s *Service) CreateFlag(ctx context.Context, req model.FeatureFlagRequest) (uuid.UUID, error) {
+	newFlag := model.FeatureFlag{
+		ID:          uuid.New(),
+		Key:         req.Key,
+		Description: req.Description,
+		Enabled:     req.Enabled,
 	}
-	return nil
+
+	if err := s.store.CreateFlag(ctx, newFlag); err != nil {
+		return uuid.Nil, fmt.Errorf("failed to create flag: %w", err)
+	}
+
+	return newFlag.ID, nil
 }
 
-func (s *Service) UpdateFlag(ctx context.Context, flag model.FeatureFlag) error {
-	if err := s.store.UpdateFlag(ctx, flag); err != nil {
+func (s *Service) UpdateFlag(ctx context.Context, id uuid.UUID, req model.FeatureFlagRequest) error {
+	flagToUpdate := model.FeatureFlag{
+		ID:          id,
+		Key:         req.Key,
+		Description: req.Description,
+		Enabled:     req.Enabled,
+	}
+
+	if err := s.store.UpdateFlag(ctx, flagToUpdate); err != nil {
 		if errors.Is(err, model.ErrNotFound) {
 			return model.ErrNotFound
 		}

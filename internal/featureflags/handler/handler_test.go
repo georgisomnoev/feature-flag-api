@@ -1,6 +1,7 @@
 package handler_test
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
 	"net/http"
@@ -82,7 +83,7 @@ var _ = Describe("Handler", func() {
 			request.Header.Set("Authorization", "Bearer validToken")
 		})
 
-		Context("and contains an invalid or missing user ID", func() {
+		Context("contains an invalid or missing user ID", func() {
 			BeforeEach(func() {
 				claims := jwt.MapClaims{"sub": ""}
 				jwtHelper.ValidateTokenReturns(claims, nil)
@@ -95,13 +96,13 @@ var _ = Describe("Handler", func() {
 			})
 		})
 
-		Context("and contains valid claims", func() {
+		Context("contains valid claims", func() {
 			BeforeEach(func() {
 				claims := jwt.MapClaims{"sub": validUserID}
 				jwtHelper.ValidateTokenReturns(claims, nil)
 			})
 
-			Context("but the user does not exist", func() {
+			Context("the user does not exist", func() {
 				BeforeEach(func() {
 					authStore.UserExistsReturns(false, nil)
 				})
@@ -253,6 +254,13 @@ var _ = Describe("Handler", func() {
 		It("succeeds", func() {
 			e.ServeHTTP(recorder, request)
 			Expect(recorder.Code).To(Equal(http.StatusCreated))
+
+			var response map[string]string
+			err := json.Unmarshal(recorder.Body.Bytes(), &response)
+			Expect(err).NotTo(HaveOccurred())
+			Expect(response).To(HaveKey("id"))
+			_, err = uuid.Parse(response["id"])
+			Expect(err).NotTo(HaveOccurred())
 		})
 
 		Context("when the payload is invalid", func() {
@@ -268,7 +276,9 @@ var _ = Describe("Handler", func() {
 	})
 
 	Describe("PUT /flags/:id", func() {
-		var payload string
+		var (
+			payload string
+		)
 		BeforeEach(func() {
 			claims := jwt.MapClaims{"sub": validUserID, "scopes": []string{"write:flags"}}
 			jwtHelper.ValidateTokenReturns(claims, nil)
