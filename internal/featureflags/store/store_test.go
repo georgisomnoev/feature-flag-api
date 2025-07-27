@@ -47,14 +47,12 @@ var _ = Describe("Feature Flags Store", func() {
 		var flags []model.FeatureFlag
 
 		BeforeEach(func() {
-			_, err := pool.Exec(ctx,
-				"INSERT INTO feature_flags (id, key, description, enabled, created_at, updated_at) VALUES ($1, $2, $3, $4, $5, $6)",
-				flag.ID, flag.Key, flag.Description, flag.Enabled, flag.CreatedAt, flag.UpdatedAt)
+			err := s.CreateFlag(ctx, flag)
 			Expect(err).NotTo(HaveOccurred())
 		})
 
 		AfterEach(func() {
-			_, err := pool.Exec(ctx, "DELETE FROM feature_flags WHERE id = $1", flag.ID)
+			err := s.DeleteFlag(ctx, flag.ID)
 			Expect(err).NotTo(HaveOccurred())
 		})
 
@@ -78,14 +76,12 @@ var _ = Describe("Feature Flags Store", func() {
 		var fetchedFlag model.FeatureFlag
 
 		BeforeEach(func() {
-			_, err := pool.Exec(ctx,
-				"INSERT INTO feature_flags (id, key, description, enabled, created_at, updated_at) VALUES ($1, $2, $3, $4, $5, $6)",
-				flag.ID, flag.Key, flag.Description, flag.Enabled, flag.CreatedAt, flag.UpdatedAt)
+			err := s.CreateFlag(ctx, flag)
 			Expect(err).NotTo(HaveOccurred())
 		})
 
 		AfterEach(func() {
-			_, err := pool.Exec(ctx, "DELETE FROM feature_flags WHERE id = $1", flag.ID)
+			err := s.DeleteFlag(ctx, flag.ID)
 			Expect(err).NotTo(HaveOccurred())
 		})
 
@@ -118,33 +114,33 @@ var _ = Describe("Feature Flags Store", func() {
 		})
 
 		JustAfterEach(func() {
-			_, err := pool.Exec(ctx, "DELETE FROM feature_flags WHERE id = $1", flag.ID)
+			err := s.DeleteFlag(ctx, flag.ID)
 			Expect(err).NotTo(HaveOccurred())
 		})
 
 		ItSucceeds()
 		It("inserts the feature flag into the database", func() {
-			var exists bool
-			row := pool.QueryRow(ctx, "SELECT EXISTS (SELECT 1 FROM feature_flags WHERE id = $1)", flag.ID)
-			Expect(row.Scan(&exists)).To(BeNil())
-			Expect(exists).To(BeTrue())
+			insertedFlag, err := s.GetFlagByID(ctx, flag.ID)
+			Expect(err).NotTo(HaveOccurred())
+			Expect(insertedFlag.ID).To(Equal(flag.ID))
+			Expect(insertedFlag.Key).To(Equal(flag.Key))
+			Expect(insertedFlag.Description).To(Equal(flag.Description))
+			Expect(insertedFlag.Enabled).To(Equal(flag.Enabled))
 		})
 	})
 
 	Describe("UpdateFlag", func() {
 		BeforeEach(func() {
-			_, err := pool.Exec(ctx,
-				"INSERT INTO feature_flags (id, key, description, enabled, created_at, updated_at) VALUES ($1, $2, $3, $4, $5, $6)",
-				flag.ID, flag.Key, flag.Description, flag.Enabled, flag.CreatedAt, flag.UpdatedAt)
+			err := s.CreateFlag(ctx, flag)
 			Expect(err).NotTo(HaveOccurred())
 
 			flag.Key = "updated-flag"
 			flag.Description = "updated-description"
-			flag.UpdatedAt = time.Now()
+			flag.UpdatedAt = time.Now().UTC()
 		})
 
 		AfterEach(func() {
-			_, err := pool.Exec(ctx, "DELETE FROM feature_flags WHERE id = $1", flag.ID)
+			err := s.DeleteFlag(ctx, flag.ID)
 			Expect(err).NotTo(HaveOccurred())
 		})
 
@@ -154,11 +150,8 @@ var _ = Describe("Feature Flags Store", func() {
 
 		ItSucceeds()
 		It("updates the feature flag in the database", func() {
-			var updatedFlag model.FeatureFlag
-			row := pool.QueryRow(ctx,
-				"SELECT id, key, description, enabled, created_at, updated_at FROM feature_flags WHERE id = $1",
-				flag.ID)
-			Expect(row.Scan(&updatedFlag.ID, &updatedFlag.Key, &updatedFlag.Description, &updatedFlag.Enabled, &updatedFlag.CreatedAt, &updatedFlag.UpdatedAt)).To(BeNil())
+			updatedFlag, err := s.GetFlagByID(ctx, flag.ID)
+			Expect(err).NotTo(HaveOccurred())
 			Expect(updatedFlag.Key).To(Equal(flag.Key))
 			Expect(updatedFlag.Description).To(Equal(flag.Description))
 			Expect(updatedFlag.Enabled).To(Equal(flag.Enabled))
@@ -166,33 +159,28 @@ var _ = Describe("Feature Flags Store", func() {
 	})
 
 	Describe("DeleteFlag", func() {
-		BeforeEach(func() {
-			_, err := pool.Exec(ctx,
-				"INSERT INTO feature_flags (id, key, description, enabled, created_at, updated_at) VALUES ($1, $2, $3, $4, $5, $6)",
-				flag.ID, flag.Key, flag.Description, flag.Enabled, flag.CreatedAt, flag.UpdatedAt)
-			Expect(err).NotTo(HaveOccurred())
-		})
-
-		AfterEach(func() {
-			_, err := pool.Exec(ctx, "DELETE FROM feature_flags WHERE id = $1", flag.ID)
-			Expect(err).NotTo(HaveOccurred())
-		})
-
 		JustBeforeEach(func() {
-			errAction = s.DeleteFlag(ctx, flagID)
+			errAction = s.DeleteFlag(ctx, flag.ID)
 		})
 
-		ItSucceeds()
-		It("deletes the feature flag from the database", func() {
-			var exists bool
-			row := pool.QueryRow(ctx, "SELECT EXISTS (SELECT 1 FROM feature_flags WHERE id = $1)", flagID)
-			Expect(row.Scan(&exists)).To(BeNil())
-			Expect(exists).To(BeFalse())
+		Context("when the feature flag exist", func() {
+			BeforeEach(func() {
+				err := s.CreateFlag(ctx, flag)
+				Expect(err).NotTo(HaveOccurred())
+			})
+
+			ItSucceeds()
+			It("deletes the feature flag from the database", func() {
+				var exists bool
+				row := pool.QueryRow(ctx, "SELECT EXISTS (SELECT 1 FROM feature_flags WHERE id = $1)", flagID)
+				Expect(row.Scan(&exists)).To(BeNil())
+				Expect(exists).To(BeFalse())
+			})
 		})
 
 		Context("when the feature flag does not exist", func() {
 			BeforeEach(func() {
-				flagID = uuid.New()
+				flag.ID = uuid.New()
 			})
 
 			It("returns not found error", func() {
