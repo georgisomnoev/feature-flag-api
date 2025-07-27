@@ -32,8 +32,8 @@ var _ = Describe("Feature Flags Store", func() {
 			Key:         "test-flag",
 			Description: "test-description",
 			Enabled:     true,
-			CreatedAt:   time.Now(),
-			UpdatedAt:   time.Now(),
+			CreatedAt:   time.Now().UTC(),
+			UpdatedAt:   time.Now().UTC(),
 		}
 	})
 
@@ -69,8 +69,8 @@ var _ = Describe("Feature Flags Store", func() {
 			Expect(flags[len(flags)-1].Key).To(Equal(flag.Key))
 			Expect(flags[len(flags)-1].Description).To(Equal(flag.Description))
 			Expect(flags[len(flags)-1].Enabled).To(Equal(flag.Enabled))
-			Expect(flags[len(flags)-1].CreatedAt).To(BeTemporally(">", time.Now().UTC()))
-			Expect(flags[len(flags)-1].UpdatedAt).To(BeTemporally(">", time.Now().UTC()))
+			Expect(flags[len(flags)-1].CreatedAt).To(BeTemporally("<", time.Now().UTC()))
+			Expect(flags[len(flags)-1].UpdatedAt).To(BeTemporally("<", time.Now().UTC()))
 		})
 	})
 
