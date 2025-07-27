@@ -12,18 +12,29 @@ The project is built using:
 - [PostgreSQL](https://www.postgresql.org) for a database store.
 - [Migrate](https://github.com/golang-migrate/migrate/) for managing DB migrations.
 
+## Application Workflow Overview
+```
+User --> [Post /auth] --> Auth Service (Generates and returns JWT)
+       --> [Get/Post/Put /flags] --> Feature Flags API
+             --> Middleware (Validates Token)
+                   --> CRUD Operations (Role/Scope filtering)
+```
+
 ## Prerequsites
 - Go (v1.24 was used during development)
 - Ginkgo CLI (for running the tests)
 
-Before running the app please download the dependencies:
+
+## Initial setup
+- Download the dependencies:
 ```bash
 make vendor
 ```
-Generate server certificates and jwt keys:
+- Generate server certificates and jwt keys:
 ```bash
 make generate-certs-and-keys
 ```
+- Create an `.env` file. Feel free to use the `.env.example`.
 
 ## How to run the app
 To run the app with docker:
