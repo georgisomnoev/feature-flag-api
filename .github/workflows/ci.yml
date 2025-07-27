@@ -11,21 +11,6 @@ jobs:
     name: Basic CI Pipeline
     runs-on: ubuntu-latest
 
-    # services:
-    #   postgres:
-    #     image: postgres:15.7
-    #     env:
-    #       POSTGRES_USER: ffuser
-    #       POSTGRES_PASSWORD: ffpass
-    #       POSTGRES_DB: featureflagsdb
-    #     ports:
-    #       - "5432:5432"
-    #     options: >-
-    #       --health-cmd="pg_isready -U ffuser -d featureflagsdb"
-    #       --health-interval=10s
-    #       --health-timeout=5s
-    #       --health-retries=5
-
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
@@ -34,16 +19,16 @@ jobs:
         uses: actions/setup-go@v5
         with:
           go-version: '1.24'
-
-      # - name: Run the migrations
-      #   run: |
-      #     go install github.com/golang-migrate/migrate@latest
-      #     migrate -path ./migrations -database "pgx://ffuser:ffpass@localhost:5432/featureflagsdb" up
       
       - name: Run linter
         uses: golangci/golangci-lint-action@v6
         with:
           args: --timeout=2m
+      
+      - name: Run security check
+        run: |
+          go install golang.org/x/vuln/cmd/govulncheck@latest
+          govulncheck ./...
 
       - name: Generate certificates and keys
         run: make generate-certs-and-keys
@@ -51,14 +36,12 @@ jobs:
       - name: Download dependencies
         run: make vendor
 
-      # - name: Build the app
-      #   run: |
-      #     go build -v ./...
-      - name: Docker compose test
+      - name: Run the app
         run: |
-          docker compose up -d
+          cp .env.example .env 
+          make run-app
 
-      - name: Run tests
+      - name: Run all the tests
         run: |
           go install github.com/onsi/ginkgo/v2/ginkgo@latest
           make test
