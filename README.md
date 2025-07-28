@@ -144,7 +144,8 @@ curl -X DELETE https://127.0.0.1:8443/flags/<ID> \
 ```
 
 ## Future Enhancements:
-- Token refresh functionality
+- Proper input validation for the feature flags.
+- Token refresh functionality.
 - Depending on the environment, the app's web API communication could use just `http`.
 
 Feedback and questions are welcome!
