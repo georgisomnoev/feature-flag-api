@@ -17,7 +17,7 @@ var (
 
 func TestFeatureFlags(t *testing.T) {
 	RegisterFailHandler(Fail)
-	RunSpecs(t, "Auth Integration Suite")
+	RunSpecs(t, "Feature Flags Integration Suite")
 }
 
 var _ = BeforeSuite(func() {

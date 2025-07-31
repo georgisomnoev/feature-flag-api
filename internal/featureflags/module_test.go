@@ -10,9 +10,8 @@ import (
 
 	authModel "github.com/georgisomnoev/feature-flag-api/internal/auth/model"
 	authStore "github.com/georgisomnoev/feature-flag-api/internal/auth/store"
-	"github.com/georgisomnoev/feature-flag-api/internal/featureflags/handler"
+	"github.com/georgisomnoev/feature-flag-api/internal/featureflags"
 	"github.com/georgisomnoev/feature-flag-api/internal/featureflags/model"
-	"github.com/georgisomnoev/feature-flag-api/internal/featureflags/service"
 	"github.com/georgisomnoev/feature-flag-api/internal/featureflags/store"
 	"github.com/georgisomnoev/feature-flag-api/internal/jwthelper"
 	"github.com/georgisomnoev/feature-flag-api/internal/validator"
@@ -21,6 +20,7 @@ import (
 	"github.com/labstack/echo/v4"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
+	. "github.com/onsi/gomega/gstruct"
 )
 
 var _ = Describe("Feature Flags Integration Test", Label("integration"), func() {
@@ -30,8 +30,6 @@ var _ = Describe("Feature Flags Integration Test", Label("integration"), func() 
 		srv                 *httptest.Server
 		authenticationStore *authStore.Store
 		featureFlagStore    *store.Store
-		featureFlagService  *service.Service
-		featureFlagHandler  *handler.Handler
 
 		jwtPrivateKey = "../../certs/jwt_keys/private.pem"
 		jwtPublicKey  = "../../certs/jwt_keys/public.pem"
@@ -40,15 +38,13 @@ var _ = Describe("Feature Flags Integration Test", Label("integration"), func() 
 	BeforeEach(func() {
 		e := echo.New()
 		e.Validator = validator.GetValidator()
+		authenticationStore = authStore.NewStore(pool)
 		jwtHelper, err := jwthelper.NewJWTHelper(jwtPrivateKey, jwtPublicKey)
 		Expect(err).ToNot(HaveOccurred())
 
 		featureFlagStore = store.NewStore(pool)
-		featureFlagService = service.NewService(featureFlagStore)
 
-		authenticationStore = authStore.NewStore(pool)
-		featureFlagHandler = handler.NewHandler(featureFlagService, authenticationStore, jwtHelper)
-		featureFlagHandler.RegisterHandlers(e)
+		featureflags.Process(pool, e, authenticationStore, jwtHelper)
 
 		srv = httptest.NewServer(e)
 
@@ -74,18 +70,16 @@ var _ = Describe("Feature Flags Integration Test", Label("integration"), func() 
 
 	Describe("Feature Flags API", func() {
 		var (
-			testFlag   model.FeatureFlag
-			testFlagID uuid.UUID
-			errAction  error
+			testFlag  model.FeatureFlag
+			errAction error
 
 			req  *http.Request
 			resp *http.Response
 		)
 
 		BeforeEach(func() {
-			testFlagID = uuid.New()
 			testFlag = model.FeatureFlag{
-				ID:          testFlagID,
+				ID:          uuid.New(),
 				Key:         "test-flag",
 				Description: "test description",
 				Enabled:     true,
@@ -136,13 +130,14 @@ var _ = Describe("Feature Flags Integration Test", Label("integration"), func() 
 				var flags []model.FeatureFlag
 				err = json.NewDecoder(resp.Body).Decode(&flags)
 				Expect(err).NotTo(HaveOccurred())
-				Expect(len(flags)).To(BeNumerically(">=", 1))
-				Expect(flags[len(flags)-1].ID).To(Equal(testFlag.ID))
-				Expect(flags[len(flags)-1].Key).To(Equal(testFlag.Key))
-				Expect(flags[len(flags)-1].Description).To(Equal(testFlag.Description))
-				Expect(flags[len(flags)-1].CreatedAt).To(BeTemporally("<", time.Now().UTC()))
-				Expect(flags[len(flags)-1].UpdatedAt).To(BeTemporally("<", time.Now().UTC()))
-
+				Expect(flags).To(ContainElement(MatchFields(IgnoreExtras, Fields{
+					"ID":          Equal(testFlag.ID),
+					"Key":         Equal(testFlag.Key),
+					"Description": Equal(testFlag.Description),
+					"Enabled":     Equal(testFlag.Enabled),
+					"CreatedAt":   BeTemporally("~", time.Now().UTC(), time.Second),
+					"UpdatedAt":   BeTemporally("~", time.Now().UTC(), time.Second),
+				})))
 			})
 		})
 
@@ -164,25 +159,30 @@ var _ = Describe("Feature Flags Integration Test", Label("integration"), func() 
 				var flag model.FeatureFlag
 				err = json.NewDecoder(resp.Body).Decode(&flag)
 				Expect(err).ToNot(HaveOccurred())
-				Expect(flag.ID).To(Equal(testFlagID))
-				Expect(flag.Key).To(Equal(testFlag.Key))
-				Expect(flag.Description).To(Equal(testFlag.Description))
-				Expect(flag.CreatedAt).To(BeTemporally("<", time.Now().UTC()))
-				Expect(flag.UpdatedAt).To(BeTemporally("<", time.Now().UTC()))
+				Expect(flag).To((MatchFields(IgnoreExtras, Fields{
+					"ID":          Equal(testFlag.ID),
+					"Key":         Equal(testFlag.Key),
+					"Description": Equal(testFlag.Description),
+					"Enabled":     Equal(testFlag.Enabled),
+					"CreatedAt":   BeTemporally("~", time.Now().UTC(), time.Second),
+					"UpdatedAt":   BeTemporally("~", time.Now().UTC(), time.Second),
+				})))
 			})
 		})
 
 		Context("Create New Feature Flag", func() {
 			var (
 				generateFlagID uuid.UUID
+				newFlag        model.FeatureFlag
 			)
 
 			BeforeEach(func() {
-				payload, err := json.Marshal(map[string]interface{}{
-					"key":         "new-flag",
-					"description": "new description",
-					"enabled":     true,
-				})
+				newFlag = model.FeatureFlag{
+					Key:         "new-flag",
+					Description: "new description",
+					Enabled:     true,
+				}
+				payload, err := json.Marshal(newFlag)
 				Expect(err).NotTo(HaveOccurred())
 
 				req, err = http.NewRequest(http.MethodPost, fmt.Sprintf("%s/flags", srv.URL), bytes.NewBuffer(payload))
@@ -208,8 +208,20 @@ var _ = Describe("Feature Flags Integration Test", Label("integration"), func() 
 			})
 
 			ItSucceeds()
-			It("creates the feature flag", func() {
+			It("returns the correct status code", func() {
 				Expect(resp.StatusCode).To(Equal(http.StatusCreated))
+			})
+			It("creates the flag", func() {
+				storedFlag, err := featureFlagStore.GetFlagByID(ctx, generateFlagID)
+				Expect(err).NotTo(HaveOccurred())
+				Expect(storedFlag).To((MatchFields(IgnoreExtras, Fields{
+					"ID":          Equal(generateFlagID),
+					"Key":         Equal(newFlag.Key),
+					"Description": Equal(newFlag.Description),
+					"Enabled":     Equal(newFlag.Enabled),
+					"CreatedAt":   BeTemporally("~", time.Now().UTC(), time.Second),
+					"UpdatedAt":   BeTemporally("~", time.Now().UTC(), time.Second),
+				})))
 			})
 		})
 
@@ -217,6 +229,7 @@ var _ = Describe("Feature Flags Integration Test", Label("integration"), func() 
 			var (
 				payload     []byte
 				anotherFlag model.FeatureFlag
+				updatedFlag model.FeatureFlag
 			)
 
 			BeforeEach(func() {
@@ -230,11 +243,12 @@ var _ = Describe("Feature Flags Integration Test", Label("integration"), func() 
 				err := featureFlagStore.CreateFlag(ctx, anotherFlag)
 				Expect(err).ToNot(HaveOccurred())
 
-				payload, err = json.Marshal(map[string]interface{}{
-					"key":         "updated-flag",
-					"description": "updated description",
-					"enabled":     false,
-				})
+				updatedFlag = model.FeatureFlag{
+					Key:         "updated-flag",
+					Description: "updated description",
+					Enabled:     false,
+				}
+				payload, err = json.Marshal(updatedFlag)
 				Expect(err).ToNot(HaveOccurred())
 
 				req, err = http.NewRequest(http.MethodPut, fmt.Sprintf("%s/flags/%s", srv.URL, anotherFlag.ID), bytes.NewBuffer(payload))
@@ -249,8 +263,20 @@ var _ = Describe("Feature Flags Integration Test", Label("integration"), func() 
 			})
 
 			ItSucceeds()
-			It("updates the feature flag", func() {
+			It("returns the correct status code", func() {
 				Expect(resp.StatusCode).To(Equal(http.StatusOK))
+			})
+			It("updates the flag", func() {
+				storedFlag, err := featureFlagStore.GetFlagByID(ctx, anotherFlag.ID)
+				Expect(err).NotTo(HaveOccurred())
+				Expect(storedFlag).To((MatchFields(IgnoreExtras, Fields{
+					"ID":          Equal(anotherFlag.ID),
+					"Key":         Equal(updatedFlag.Key),
+					"Description": Equal(updatedFlag.Description),
+					"Enabled":     Equal(updatedFlag.Enabled),
+					"CreatedAt":   BeTemporally("~", time.Now().UTC(), time.Second),
+					"UpdatedAt":   BeTemporally("~", time.Now().UTC(), time.Second),
+				})))
 			})
 		})
 
@@ -276,8 +302,12 @@ var _ = Describe("Feature Flags Integration Test", Label("integration"), func() 
 			})
 
 			ItSucceeds()
-			It("deletes the feature flag", func() {
+			It("returns the correct status code", func() {
 				Expect(resp.StatusCode).To(Equal(http.StatusNoContent))
+			})
+			It("deletes the flag", func() {
+				_, err := featureFlagStore.GetFlagByID(ctx, anotherFlag.ID)
+				Expect(err).To(MatchError(model.ErrNotFound))
 			})
 		})
 	})

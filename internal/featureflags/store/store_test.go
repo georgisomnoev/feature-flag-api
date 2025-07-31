@@ -1,6 +1,7 @@
 package store_test
 
 import (
+	"fmt"
 	"time"
 
 	"github.com/georgisomnoev/feature-flag-api/internal/featureflags/model"
@@ -8,6 +9,7 @@ import (
 	"github.com/google/uuid"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
+	. "github.com/onsi/gomega/gstruct"
 )
 
 var _ = Describe("Feature Flags Store", func() {
@@ -47,12 +49,12 @@ var _ = Describe("Feature Flags Store", func() {
 		var flags []model.FeatureFlag
 
 		BeforeEach(func() {
-			err := s.CreateFlag(ctx, flag)
+			err := s.AddTestFlag(ctx, flag)
 			Expect(err).NotTo(HaveOccurred())
 		})
 
 		AfterEach(func() {
-			err := s.DeleteFlag(ctx, flag.ID)
+			err := s.RemoveTestFlag(ctx, flag.ID)
 			Expect(err).NotTo(HaveOccurred())
 		})
 
@@ -62,13 +64,14 @@ var _ = Describe("Feature Flags Store", func() {
 
 		ItSucceeds()
 		It("returns all the feature flags", func() {
-			Expect(len(flags)).To(BeNumerically(">=", 1))
-			Expect(flags[len(flags)-1].ID).To(Equal(flag.ID))
-			Expect(flags[len(flags)-1].Key).To(Equal(flag.Key))
-			Expect(flags[len(flags)-1].Description).To(Equal(flag.Description))
-			Expect(flags[len(flags)-1].Enabled).To(Equal(flag.Enabled))
-			Expect(flags[len(flags)-1].CreatedAt).To(BeTemporally("<", time.Now().UTC()))
-			Expect(flags[len(flags)-1].UpdatedAt).To(BeTemporally("<", time.Now().UTC()))
+			Expect(flags).To(ContainElement(MatchFields(IgnoreExtras, Fields{
+				"ID":          Equal(flag.ID),
+				"Key":         Equal(flag.Key),
+				"Description": Equal(flag.Description),
+				"Enabled":     Equal(flag.Enabled),
+				"CreatedAt":   BeTemporally("~", time.Now().UTC(), time.Second),
+				"UpdatedAt":   BeTemporally("~", time.Now().UTC(), time.Second),
+			})))
 		})
 	})
 
@@ -76,12 +79,12 @@ var _ = Describe("Feature Flags Store", func() {
 		var fetchedFlag model.FeatureFlag
 
 		BeforeEach(func() {
-			err := s.CreateFlag(ctx, flag)
+			err := s.AddTestFlag(ctx, flag)
 			Expect(err).NotTo(HaveOccurred())
 		})
 
 		AfterEach(func() {
-			err := s.DeleteFlag(ctx, flag.ID)
+			err := s.RemoveTestFlag(ctx, flag.ID)
 			Expect(err).NotTo(HaveOccurred())
 		})
 
@@ -103,7 +106,7 @@ var _ = Describe("Feature Flags Store", func() {
 			})
 
 			It("returns an error", func() {
-				Expect(errAction).To(Equal(model.ErrNotFound))
+				Expect(errAction).To(MatchError(model.ErrNotFound))
 			})
 		})
 	})
@@ -114,24 +117,28 @@ var _ = Describe("Feature Flags Store", func() {
 		})
 
 		JustAfterEach(func() {
-			err := s.DeleteFlag(ctx, flag.ID)
+			err := s.RemoveTestFlag(ctx, flag.ID)
 			Expect(err).NotTo(HaveOccurred())
 		})
 
 		ItSucceeds()
 		It("inserts the feature flag into the database", func() {
-			insertedFlag, err := s.GetFlagByID(ctx, flag.ID)
+			insertedFlag, err := s.FetchTestFlagByID(ctx, flag.ID)
 			Expect(err).NotTo(HaveOccurred())
-			Expect(insertedFlag.ID).To(Equal(flag.ID))
-			Expect(insertedFlag.Key).To(Equal(flag.Key))
-			Expect(insertedFlag.Description).To(Equal(flag.Description))
-			Expect(insertedFlag.Enabled).To(Equal(flag.Enabled))
+			Expect(insertedFlag).To((MatchFields(IgnoreExtras, Fields{
+				"ID":          Equal(flag.ID),
+				"Key":         Equal(flag.Key),
+				"Description": Equal(flag.Description),
+				"Enabled":     Equal(flag.Enabled),
+				"CreatedAt":   BeTemporally("~", time.Now().UTC(), time.Second),
+				"UpdatedAt":   BeTemporally("~", time.Now().UTC(), time.Second),
+			})))
 		})
 	})
 
 	Describe("UpdateFlag", func() {
 		BeforeEach(func() {
-			err := s.CreateFlag(ctx, flag)
+			err := s.AddTestFlag(ctx, flag)
 			Expect(err).NotTo(HaveOccurred())
 
 			flag.Key = "updated-flag"
@@ -140,7 +147,7 @@ var _ = Describe("Feature Flags Store", func() {
 		})
 
 		AfterEach(func() {
-			err := s.DeleteFlag(ctx, flag.ID)
+			err := s.RemoveTestFlag(ctx, flag.ID)
 			Expect(err).NotTo(HaveOccurred())
 		})
 
@@ -150,11 +157,16 @@ var _ = Describe("Feature Flags Store", func() {
 
 		ItSucceeds()
 		It("updates the feature flag in the database", func() {
-			updatedFlag, err := s.GetFlagByID(ctx, flag.ID)
+			updatedFlag, err := s.FetchTestFlagByID(ctx, flag.ID)
 			Expect(err).NotTo(HaveOccurred())
-			Expect(updatedFlag.Key).To(Equal(flag.Key))
-			Expect(updatedFlag.Description).To(Equal(flag.Description))
-			Expect(updatedFlag.Enabled).To(Equal(flag.Enabled))
+			Expect(updatedFlag).To((MatchFields(IgnoreExtras, Fields{
+				"ID":          Equal(flag.ID),
+				"Key":         Equal(flag.Key),
+				"Description": Equal(flag.Description),
+				"Enabled":     Equal(flag.Enabled),
+				"CreatedAt":   BeTemporally("~", time.Now().UTC(), time.Second),
+				"UpdatedAt":   BeTemporally("~", time.Now().UTC(), time.Second),
+			})))
 		})
 	})
 
@@ -165,14 +177,15 @@ var _ = Describe("Feature Flags Store", func() {
 
 		Context("when the feature flag exist", func() {
 			BeforeEach(func() {
-				err := s.CreateFlag(ctx, flag)
+				err := s.AddTestFlag(ctx, flag)
 				Expect(err).NotTo(HaveOccurred())
 			})
 
 			ItSucceeds()
 			It("deletes the feature flag from the database", func() {
 				var exists bool
-				row := pool.QueryRow(ctx, "SELECT EXISTS (SELECT 1 FROM feature_flags WHERE id = $1)", flagID)
+				query := fmt.Sprintf("SELECT EXISTS (SELECT 1 FROM %s WHERE id = $1)", store.FeatureFlagsTable)
+				row := pool.QueryRow(ctx, query, flagID)
 				Expect(row.Scan(&exists)).To(BeNil())
 				Expect(exists).To(BeFalse())
 			})
@@ -184,7 +197,7 @@ var _ = Describe("Feature Flags Store", func() {
 			})
 
 			It("returns not found error", func() {
-				Expect(errAction).To(Equal(model.ErrNotFound))
+				Expect(errAction).To(MatchError(model.ErrNotFound))
 			})
 		})
 	})

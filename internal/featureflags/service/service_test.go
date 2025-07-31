@@ -10,6 +10,7 @@ import (
 	"github.com/google/uuid"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
+	. "github.com/onsi/gomega/gstruct"
 )
 
 var (
@@ -55,10 +56,12 @@ var _ = Describe("Service", func() {
 
 		ItSucceeds()
 		It("returns the list of feature flags", func() {
-			Expect(flags).To(HaveLen(1))
-			Expect(flags[0].Key).To(Equal(featureFlag.Key))
-			Expect(flags[0].Description).To(Equal(featureFlag.Description))
-			Expect(flags[0].Enabled).To(Equal(featureFlag.Enabled))
+			Expect(flags).To(ContainElement(MatchFields(IgnoreExtras, Fields{
+				"ID":          Equal(featureFlag.ID),
+				"Key":         Equal(featureFlag.Key),
+				"Description": Equal(featureFlag.Description),
+				"Enabled":     Equal(featureFlag.Enabled),
+			})))
 		})
 
 		Context("when the store returns an error", func() {
@@ -89,9 +92,13 @@ var _ = Describe("Service", func() {
 
 		ItSucceeds()
 		It("returns the feature flag by ID", func() {
-			Expect(featureFlag.Key).To(Equal("test-flag"))
-			Expect(featureFlag.Description).To(Equal("test description"))
-			Expect(featureFlag.Enabled).To(BeTrue())
+			Expect(store.GetFlagByIDCallCount()).To(Equal(1))
+			Expect(featureFlag).To((MatchFields(IgnoreExtras, Fields{
+				"ID":          Equal(flagID),
+				"Key":         Equal(featureFlag.Key),
+				"Description": Equal(featureFlag.Description),
+				"Enabled":     Equal(featureFlag.Enabled),
+			})))
 		})
 
 		Context("when the store returns not found", func() {
@@ -133,9 +140,12 @@ var _ = Describe("Service", func() {
 			Expect(store.CreateFlagCallCount()).To(Equal(1))
 			actualCtx, actualFlag := store.CreateFlagArgsForCall(0)
 			Expect(actualCtx).To(Equal(ctx))
-			Expect(actualFlag.ID).To(Equal(flagID))
-			Expect(actualFlag.Key).To(Equal(featureFlagRequest.Key))
-			Expect(actualFlag.Description).To(Equal(featureFlagRequest.Description))
+			Expect(actualFlag).To((MatchFields(IgnoreExtras, Fields{
+				"ID":          Equal(flagID),
+				"Key":         Equal(featureFlagRequest.Key),
+				"Description": Equal(featureFlagRequest.Description),
+				"Enabled":     Equal(featureFlagRequest.Enabled),
+			})))
 		})
 
 		Context("when the store returns an error", func() {

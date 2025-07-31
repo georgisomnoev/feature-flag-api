@@ -30,10 +30,10 @@ var _ = Describe("Auth Integration Test", Label("integration"), func() {
 	BeforeEach(func() {
 		e := echo.New()
 		jwtHelper, err := jwthelper.NewJWTHelper(jwtPrivateKey, jwtPublicKey)
-		Expect(err).ToNot(HaveOccurred())
+		Expect(err).NotTo(HaveOccurred())
 
 		authStore = auth.Process(pool, e, jwtHelper)
-		Expect(authStore).ToNot(BeNil())
+		Expect(authStore).NotTo(BeNil())
 
 		srv = httptest.NewServer(e)
 	})
@@ -53,7 +53,7 @@ var _ = Describe("Auth Integration Test", Label("integration"), func() {
 			username = "testuser"
 			password = "testpass"
 			hashedPassword, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
-			Expect(err).ToNot(HaveOccurred())
+			Expect(err).NotTo(HaveOccurred())
 
 			testUser = model.User{
 				ID:       uuid.New(),
@@ -63,12 +63,12 @@ var _ = Describe("Auth Integration Test", Label("integration"), func() {
 			}
 
 			err = authStore.AddUser(ctx, testUser)
-			Expect(err).ToNot(HaveOccurred())
+			Expect(err).NotTo(HaveOccurred())
 		})
 
 		AfterEach(func() {
 			err := authStore.DeleteUserByID(ctx, testUser.ID)
-			Expect(err).ToNot(HaveOccurred())
+			Expect(err).NotTo(HaveOccurred())
 		})
 
 		Context("when authenticating an existing user", func() {
@@ -79,16 +79,16 @@ var _ = Describe("Auth Integration Test", Label("integration"), func() {
 				})
 
 				resp, err := http.Post(srv.URL+"/auth", "application/json", bytes.NewBuffer(payload))
-				Expect(err).ToNot(HaveOccurred())
+				Expect(err).NotTo(HaveOccurred())
 				defer resp.Body.Close()
 
 				Expect(resp.StatusCode).To(Equal(http.StatusOK))
 
 				var response map[string]string
 				err = json.NewDecoder(resp.Body).Decode(&response)
-				Expect(err).ToNot(HaveOccurred())
+				Expect(err).NotTo(HaveOccurred())
 				Expect(response).To(HaveKey("token"))
-				Expect(response["token"]).ToNot(BeEmpty())
+				Expect(response["token"]).NotTo(BeEmpty())
 			})
 		})
 
@@ -100,14 +100,14 @@ var _ = Describe("Auth Integration Test", Label("integration"), func() {
 				})
 
 				resp, err := http.Post(srv.URL+"/auth", "application/json", bytes.NewBuffer(payload))
-				Expect(err).ToNot(HaveOccurred())
+				Expect(err).NotTo(HaveOccurred())
 				defer resp.Body.Close()
 
 				Expect(resp.StatusCode).To(Equal(http.StatusUnauthorized))
 
 				var response map[string]string
 				err = json.NewDecoder(resp.Body).Decode(&response)
-				Expect(err).ToNot(HaveOccurred())
+				Expect(err).NotTo(HaveOccurred())
 				Expect(response).To(HaveKey("message"))
 				Expect(response["message"]).To(Equal("invalid credentials"))
 			})
@@ -121,14 +121,14 @@ var _ = Describe("Auth Integration Test", Label("integration"), func() {
 				})
 
 				resp, err := http.Post(srv.URL+"/auth", "application/json", bytes.NewBuffer(payload))
-				Expect(err).ToNot(HaveOccurred())
+				Expect(err).NotTo(HaveOccurred())
 				defer resp.Body.Close()
 
 				Expect(resp.StatusCode).To(Equal(http.StatusUnauthorized))
 
 				var response map[string]string
 				err = json.NewDecoder(resp.Body).Decode(&response)
-				Expect(err).ToNot(HaveOccurred())
+				Expect(err).NotTo(HaveOccurred())
 				Expect(response).To(HaveKey("message"))
 				Expect(response["message"]).To(Equal("invalid credentials"))
 			})
