@@ -144,8 +144,11 @@ curl -X DELETE https://127.0.0.1:8443/flags/<ID> \
 ```
 
 ## Future Enhancements:
-- Proper input validation for the feature flags.
-- Token refresh functionality.
+- Proper validation for the api input fields.
+- Group based access control for the feature flags. Currently all users have access to all the feature flags.
 - Depending on the environment, the app's web API communication could use just `http`.
+- Token refresh functionality.
+- Token/user blacklisting to revoke access under specific conditions.
+- Enable a feature toggle at a specific date.
 
 Feedback and questions are welcome!
