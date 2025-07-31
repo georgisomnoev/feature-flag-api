@@ -65,7 +65,11 @@ func validateTokenClaims(ctx context.Context, c echo.Context, claims jwt.MapClai
 		return echo.NewHTTPError(http.StatusForbidden, "no scopes found in token")
 	}
 
-	if !validateScopes(claims["scopes"], requiredScope) {
+	normalizeScopes, err := normalizeScopes(claims["scopes"])
+	if err != nil {
+		return echo.NewHTTPError(http.StatusInternalServerError, "invalid scope format")
+	}
+	if !validateScopes(normalizeScopes, requiredScope) {
 		return echo.NewHTTPError(http.StatusForbidden, "insufficient permissions")
 	}
 
@@ -74,21 +78,27 @@ func validateTokenClaims(ctx context.Context, c echo.Context, claims jwt.MapClai
 	return nil
 }
 
-func validateScopes(scopes interface{}, requiredScope string) bool {
-	scopeList, ok := scopes.([]interface{})
-	if !ok {
-		if scopeStrList, okStr := scopes.([]string); okStr {
-			for _, scope := range scopeStrList {
-				if scope == requiredScope {
-					return true
-				}
+func normalizeScopes(scopes any) ([]string, error) {
+	switch v := scopes.(type) {
+	case []string:
+		return v, nil
+	case []any:
+		strScopes := make([]string, len(v))
+		for i, scope := range v {
+			str, ok := scope.(string)
+			if !ok {
+				return nil, fmt.Errorf("invalid type in scope: %v", scope)
 			}
-		} else {
-			return false
+			strScopes[i] = str
 		}
+		return strScopes, nil
+	default:
+		return nil, fmt.Errorf("unsupported scopes type: %T", scopes)
 	}
+}
 
-	for _, scope := range scopeList {
+func validateScopes(scopes []string, requiredScope string) bool {
+	for _, scope := range scopes {
 		if scope == requiredScope {
 			return true
 		}
