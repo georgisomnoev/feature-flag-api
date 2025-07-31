@@ -25,7 +25,7 @@ func (s *Store) ListFlags(ctx context.Context) ([]model.FeatureFlag, error) {
 	query := fmt.Sprintf(`SELECT id, key, description, enabled, created_at, updated_at FROM %s`, FeatureFlagsTable)
 	rows, err := s.pool.Query(ctx, query)
 	if err != nil {
-		return nil, fmt.Errorf("failed to list feature flags: %w", err)
+		return nil, err
 	}
 	defer rows.Close()
 
@@ -33,7 +33,7 @@ func (s *Store) ListFlags(ctx context.Context) ([]model.FeatureFlag, error) {
 	for rows.Next() {
 		var flag model.FeatureFlag
 		if err := rows.Scan(&flag.ID, &flag.Key, &flag.Description, &flag.Enabled, &flag.CreatedAt, &flag.UpdatedAt); err != nil {
-			return nil, fmt.Errorf("failed to scan feature flag: %w", err)
+			return nil, err
 		}
 		flags = append(flags, flag)
 	}
@@ -49,7 +49,7 @@ func (s *Store) GetFlagByID(ctx context.Context, id uuid.UUID) (model.FeatureFla
 		if errors.Is(err, pgx.ErrNoRows) {
 			return model.FeatureFlag{}, model.ErrNotFound
 		}
-		return model.FeatureFlag{}, fmt.Errorf("failed to fetch feature flag: %w", err)
+		return model.FeatureFlag{}, err
 	}
 
 	return flag, nil
@@ -60,7 +60,7 @@ func (s *Store) CreateFlag(ctx context.Context, flag model.FeatureFlag) error {
 		VALUES ($1, $2, $3, $4)`, FeatureFlagsTable)
 	_, err := s.pool.Exec(ctx, query, flag.ID, flag.Key, flag.Description, flag.Enabled)
 	if err != nil {
-		return fmt.Errorf("failed to create feature flag: %w", err)
+		return err
 	}
 	return nil
 }
@@ -69,7 +69,7 @@ func (s *Store) UpdateFlag(ctx context.Context, flag model.FeatureFlag) error {
 	query := fmt.Sprintf(`UPDATE %s SET key = $1, description = $2, enabled = $3, updated_at = NOW() WHERE id = $4`, FeatureFlagsTable)
 	result, err := s.pool.Exec(ctx, query, flag.Key, flag.Description, flag.Enabled, flag.ID)
 	if err != nil {
-		return fmt.Errorf("failed to update feature flag: %w", err)
+		return err
 	}
 	if result.RowsAffected() == 0 {
 		return model.ErrNotFound
@@ -81,7 +81,7 @@ func (s *Store) DeleteFlag(ctx context.Context, id uuid.UUID) error {
 	query := fmt.Sprintf(`DELETE FROM %s WHERE id = $1`, FeatureFlagsTable)
 	result, err := s.pool.Exec(ctx, query, id)
 	if err != nil {
-		return fmt.Errorf("failed to delete feature flag: %w", err)
+		return err
 	}
 	if result.RowsAffected() == 0 {
 		return model.ErrNotFound

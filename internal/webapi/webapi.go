@@ -14,6 +14,7 @@ import (
 
 const (
 	gracefulShutdownTimeout = 5 * time.Second
+	contextTimeout          = 5 * time.Second
 )
 
 type TLSConfig struct {
@@ -25,8 +26,9 @@ func NewWebAPI() *echo.Echo {
 	e := echo.New()
 	e.HideBanner = true
 	e.HidePort = true
-	e.Logger.SetLevel(log.INFO)
 
+	e.Logger.SetLevel(log.INFO)
+	e.Use(middleware.ContextTimeout(contextTimeout))
 	e.Use(middleware.Logger())
 	e.Use(middleware.Recover())
 
