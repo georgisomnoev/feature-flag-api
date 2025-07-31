@@ -3,6 +3,7 @@ package handler
 import (
 	"context"
 	"errors"
+	"fmt"
 	"net/http"
 
 	"github.com/georgisomnoev/feature-flag-api/internal/featureflags/model"
@@ -106,7 +107,7 @@ func (h *Handler) createFlag(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusBadRequest, "invalid request format")
 	}
 	if err := c.Validate(&req); err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+		return echo.NewHTTPError(http.StatusBadRequest, fmt.Errorf("missing required request fields: %w", err))
 	}
 
 	flagID, err := h.svc.CreateFlag(c.Request().Context(), req)
@@ -130,7 +131,7 @@ func (h *Handler) updateFlag(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusBadRequest, "invalid request format")
 	}
 	if err := c.Validate(&req); err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+		return echo.NewHTTPError(http.StatusBadRequest, fmt.Errorf("missing required request fields: %w", err))
 	}
 
 	if err := h.svc.UpdateFlag(c.Request().Context(), flagID, req); err != nil {

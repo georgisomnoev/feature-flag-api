@@ -10,6 +10,7 @@ import (
 	"github.com/georgisomnoev/feature-flag-api/internal/auth/model"
 	"github.com/georgisomnoev/feature-flag-api/internal/auth/store"
 	"github.com/georgisomnoev/feature-flag-api/internal/jwthelper"
+	"github.com/georgisomnoev/feature-flag-api/internal/validator"
 	"github.com/google/uuid"
 	"github.com/labstack/echo/v4"
 	"golang.org/x/crypto/bcrypt"
@@ -29,6 +30,7 @@ var _ = Describe("Auth Integration Test", Label("integration"), func() {
 
 	BeforeEach(func() {
 		e := echo.New()
+		e.Validator = validator.GetValidator()
 		jwtHelper, err := jwthelper.NewJWTHelper(jwtPrivateKey, jwtPublicKey)
 		Expect(err).NotTo(HaveOccurred())
 
@@ -78,7 +80,7 @@ var _ = Describe("Auth Integration Test", Label("integration"), func() {
 					"password": "testpass",
 				})
 
-				resp, err := http.Post(srv.URL+"/auth", "application/json", bytes.NewBuffer(payload))
+				resp, err := http.Post(srv.URL+"/auth", echo.MIMEApplicationJSON, bytes.NewBuffer(payload))
 				Expect(err).NotTo(HaveOccurred())
 				defer resp.Body.Close()
 
@@ -99,7 +101,7 @@ var _ = Describe("Auth Integration Test", Label("integration"), func() {
 					"password": "wrongpass",
 				})
 
-				resp, err := http.Post(srv.URL+"/auth", "application/json", bytes.NewBuffer(payload))
+				resp, err := http.Post(srv.URL+"/auth", echo.MIMEApplicationJSON, bytes.NewBuffer(payload))
 				Expect(err).NotTo(HaveOccurred())
 				defer resp.Body.Close()
 
@@ -120,7 +122,7 @@ var _ = Describe("Auth Integration Test", Label("integration"), func() {
 					"password": "testpass",
 				})
 
-				resp, err := http.Post(srv.URL+"/auth", "application/json", bytes.NewBuffer(payload))
+				resp, err := http.Post(srv.URL+"/auth", echo.MIMEApplicationJSON, bytes.NewBuffer(payload))
 				Expect(err).NotTo(HaveOccurred())
 				defer resp.Body.Close()
 

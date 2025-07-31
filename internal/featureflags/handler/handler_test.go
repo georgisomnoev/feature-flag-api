@@ -51,7 +51,7 @@ var _ = Describe("Handler", func() {
 
 	JustBeforeEach(func() {
 		request = httptest.NewRequest(http.MethodGet, "/flags", nil)
-		request.Header.Set("Content-Type", "application/json")
+		request.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
 	})
 
 	When("the authorization header is missing", func() {
@@ -64,7 +64,7 @@ var _ = Describe("Handler", func() {
 
 	When("the token is invalid or malformed", func() {
 		JustBeforeEach(func() {
-			request.Header.Set("Authorization", "InvalidToken")
+			request.Header.Set(echo.HeaderAuthorization, "InvalidToken")
 		})
 
 		BeforeEach(func() {
@@ -80,7 +80,7 @@ var _ = Describe("Handler", func() {
 
 	When("a token is provided ", func() {
 		JustBeforeEach(func() {
-			request.Header.Set("Authorization", "Bearer validToken")
+			request.Header.Set(echo.HeaderAuthorization, "Bearer validToken")
 		})
 
 		Context("contains an invalid or missing user ID", func() {
@@ -149,7 +149,7 @@ var _ = Describe("Handler", func() {
 		})
 
 		JustBeforeEach(func() {
-			request.Header.Set("Authorization", "Bearer validToken")
+			request.Header.Set(echo.HeaderAuthorization, "Bearer validToken")
 		})
 
 		Context("when the request is successful", func() {
@@ -195,7 +195,7 @@ var _ = Describe("Handler", func() {
 
 		JustBeforeEach(func() {
 			request = httptest.NewRequest(http.MethodGet, fmt.Sprintf("/flags/%s", flagIDStr), nil)
-			request.Header.Set("Authorization", "Bearer validToken")
+			request.Header.Set(echo.HeaderAuthorization, "Bearer validToken")
 		})
 
 		Context("when the request is successful", func() {
@@ -247,8 +247,8 @@ var _ = Describe("Handler", func() {
 
 		JustBeforeEach(func() {
 			request = httptest.NewRequest(http.MethodPost, "/flags", strings.NewReader(payload))
-			request.Header.Set("Authorization", "Bearer validToken")
-			request.Header.Set("Content-Type", "application/json")
+			request.Header.Set(echo.HeaderAuthorization, "Bearer validToken")
+			request.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
 		})
 
 		It("succeeds", func() {
@@ -271,6 +271,11 @@ var _ = Describe("Handler", func() {
 			It("returns a bad request error", func() {
 				e.ServeHTTP(recorder, request)
 				Expect(recorder.Code).To(Equal(http.StatusBadRequest))
+
+				var response map[string]string
+				err := json.Unmarshal(recorder.Body.Bytes(), &response)
+				Expect(err).NotTo(HaveOccurred())
+				Expect(response["message"]).To(ContainSubstring("missing required request fields"))
 			})
 		})
 	})
@@ -289,8 +294,8 @@ var _ = Describe("Handler", func() {
 
 		JustBeforeEach(func() {
 			request = httptest.NewRequest(http.MethodPut, "/flags/123e4567-e89b-12d3-a456-426655440000", strings.NewReader(payload))
-			request.Header.Set("Authorization", "Bearer validToken")
-			request.Header.Set("Content-Type", "application/json")
+			request.Header.Set(echo.HeaderAuthorization, "Bearer validToken")
+			request.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
 		})
 
 		It("succeeds", func() {
@@ -318,6 +323,11 @@ var _ = Describe("Handler", func() {
 			It("returns bad request error", func() {
 				e.ServeHTTP(recorder, request)
 				Expect(recorder.Code).To(Equal(http.StatusBadRequest))
+
+				var response map[string]string
+				err := json.Unmarshal(recorder.Body.Bytes(), &response)
+				Expect(err).NotTo(HaveOccurred())
+				Expect(response["message"]).To(ContainSubstring("missing required request fields"))
 			})
 		})
 	})
@@ -333,7 +343,7 @@ var _ = Describe("Handler", func() {
 
 		JustBeforeEach(func() {
 			request = httptest.NewRequest(http.MethodDelete, fmt.Sprintf("/flags/%s", flagIDStr), nil)
-			request.Header.Set("Authorization", "Bearer validToken")
+			request.Header.Set(echo.HeaderAuthorization, "Bearer validToken")
 		})
 
 		It("succeeds", func() {

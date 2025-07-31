@@ -11,6 +11,7 @@ import (
 	"github.com/georgisomnoev/feature-flag-api/internal/auth/handler/handlerfakes"
 	"github.com/georgisomnoev/feature-flag-api/internal/auth/model"
 	"github.com/georgisomnoev/feature-flag-api/internal/auth/service"
+	"github.com/georgisomnoev/feature-flag-api/internal/validator"
 	"github.com/labstack/echo/v4"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
@@ -28,6 +29,7 @@ var _ = Describe("Authentication Handler", func() {
 
 	BeforeEach(func() {
 		e = echo.New()
+		e.Validator = validator.GetValidator()
 		recorder = httptest.NewRecorder()
 		authService = &handlerfakes.FakeService{}
 
@@ -109,7 +111,7 @@ var _ = Describe("Authentication Handler", func() {
 					var response map[string]string
 					err := json.Unmarshal(recorder.Body.Bytes(), &response)
 					Expect(err).NotTo(HaveOccurred())
-					Expect(response["message"]).To(Equal("username and password are required"))
+					Expect(response["message"]).To(ContainSubstring("missing required request fields"))
 				})
 			})
 
@@ -130,7 +132,7 @@ var _ = Describe("Authentication Handler", func() {
 					var response map[string]string
 					err := json.Unmarshal(recorder.Body.Bytes(), &response)
 					Expect(err).NotTo(HaveOccurred())
-					Expect(response["message"]).To(Equal("username and password are required"))
+					Expect(response["message"]).To(ContainSubstring("missing required request fields"))
 				})
 			})
 		})

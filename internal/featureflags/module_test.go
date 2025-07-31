@@ -120,7 +120,7 @@ var _ = Describe("Feature Flags Integration Test", Label("integration"), func() 
 			BeforeEach(func() {
 				req, err = http.NewRequest(http.MethodGet, srv.URL+"/flags", nil)
 				Expect(err).ToNot(HaveOccurred())
-				req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", token))
+				req.Header.Set(echo.HeaderAuthorization, fmt.Sprintf("Bearer %s", token))
 			})
 
 			ItSucceeds()
@@ -149,7 +149,7 @@ var _ = Describe("Feature Flags Integration Test", Label("integration"), func() 
 			BeforeEach(func() {
 				req, err = http.NewRequest(http.MethodGet, fmt.Sprintf("%s/flags/%s", srv.URL, testFlag.ID), nil)
 				Expect(err).ToNot(HaveOccurred())
-				req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", token))
+				req.Header.Set(echo.HeaderAuthorization, fmt.Sprintf("Bearer %s", token))
 			})
 
 			ItSucceeds()
@@ -187,8 +187,8 @@ var _ = Describe("Feature Flags Integration Test", Label("integration"), func() 
 
 				req, err = http.NewRequest(http.MethodPost, fmt.Sprintf("%s/flags", srv.URL), bytes.NewBuffer(payload))
 				Expect(err).NotTo(HaveOccurred())
-				req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", token))
-				req.Header.Set("Content-Type", "application/json")
+				req.Header.Set(echo.HeaderAuthorization, fmt.Sprintf("Bearer %s", token))
+				req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
 			})
 
 			JustBeforeEach(func() {
@@ -253,8 +253,8 @@ var _ = Describe("Feature Flags Integration Test", Label("integration"), func() 
 
 				req, err = http.NewRequest(http.MethodPut, fmt.Sprintf("%s/flags/%s", srv.URL, anotherFlag.ID), bytes.NewBuffer(payload))
 				Expect(err).ToNot(HaveOccurred())
-				req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", token))
-				req.Header.Set("Content-Type", "application/json")
+				req.Header.Set(echo.HeaderAuthorization, fmt.Sprintf("Bearer %s", token))
+				req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
 			})
 
 			AfterEach(func() {
@@ -298,7 +298,7 @@ var _ = Describe("Feature Flags Integration Test", Label("integration"), func() 
 
 				req, err = http.NewRequest(http.MethodDelete, fmt.Sprintf("%s/flags/%s", srv.URL, anotherFlag.ID), nil)
 				Expect(err).NotTo(HaveOccurred())
-				req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", token))
+				req.Header.Set(echo.HeaderAuthorization, fmt.Sprintf("Bearer %s", token))
 			})
 
 			ItSucceeds()

@@ -3,6 +3,7 @@ package handler
 import (
 	"context"
 	"errors"
+	"fmt"
 	"net/http"
 
 	"github.com/georgisomnoev/feature-flag-api/internal/auth/model"
@@ -34,9 +35,8 @@ func (h *Handler) authenticateHandler(c echo.Context) error {
 	if err := c.Bind(&req); err != nil {
 		return echo.NewHTTPError(http.StatusBadRequest, "invalid request body")
 	}
-
-	if req.Username == "" || req.Password == "" {
-		return echo.NewHTTPError(http.StatusBadRequest, "username and password are required")
+	if err := c.Validate(&req); err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, fmt.Errorf("missing required request fields: %w", err))
 	}
 
 	token, err := h.svc.Authenticate(c.Request().Context(), req.Username, req.Password)
