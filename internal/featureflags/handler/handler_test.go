@@ -125,6 +125,19 @@ var _ = Describe("Handler", func() {
 					Expect(recorder.Body.String()).To(ContainSubstring("no scopes found in token"))
 				})
 
+				Context("the scope is set but it is invalid format", func() {
+					BeforeEach(func() {
+						claims := jwt.MapClaims{"sub": validUserID, "scopes": []int{1, 2, 3}}
+						jwtHelper.ValidateTokenReturns(claims, nil)
+					})
+
+					It("returns internal server error", func() {
+						e.ServeHTTP(recorder, request)
+						Expect(recorder.Code).To(Equal(http.StatusInternalServerError))
+						Expect(recorder.Body.String()).To(ContainSubstring("invalid scope format"))
+					})
+				})
+
 				Context("the scope is set but does not have the required scopes", func() {
 					BeforeEach(func() {
 						claims := jwt.MapClaims{"sub": validUserID, "scopes": []string{"other:string"}}
