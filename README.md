@@ -14,10 +14,11 @@ The project is built using:
 
 ## Application Workflow Overview
 ```
-User --> [Post /auth] --> Auth Service (Generates and returns JWT)
-       --> [Get/Post/Put /flags] --> Feature Flags API
-             --> Middleware (Validates Token)
-                   --> CRUD Operations (Role/Scope filtering)
+User --> [Post /auth] --> Auth Module
+          --> Validate user credentials, generates and returns JWT
+User --> [Get/Post/Put/Delete /flags] --> Feature Flags Module
+          --> Middleware (Validates Token)
+            --> CRUD Operations based on user scope
 ```
 
 ## Prerequsites
