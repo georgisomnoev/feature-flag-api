@@ -15,11 +15,11 @@ type Service struct {
 
 //go:generate go run github.com/maxbrunsfeld/counterfeiter/v6 -generate
 //go:generate gowrap gen -g -p ./ -i Store -t ../../observability/templates/otel_trace.tmpl -o ./wrapped/trace/store.go
+//go:generate gowrap gen -g -p ./ -i Store -t ../../observability/templates/otel_metric.tmpl -o ./wrapped/metric/store.go
 //counterfeiter:generate . Store
 type Store interface {
 	ListFlags(ctx context.Context) ([]model.FeatureFlag, error)
 	GetFlagByID(ctx context.Context, id uuid.UUID) (model.FeatureFlag, error)
-
 	CreateFlag(ctx context.Context, flag model.FeatureFlag) error
 	UpdateFlag(ctx context.Context, flag model.FeatureFlag) error
 	DeleteFlag(ctx context.Context, id uuid.UUID) error

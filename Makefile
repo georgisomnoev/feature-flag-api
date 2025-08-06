@@ -31,28 +31,13 @@ run-app:
 	docker compose down -v --remove-orphans 
 	docker compose up -d --build featureflagsapi featureflagsdb migratedb
 
-.PHONY: run-app-with-otel
-run-app-with-otel:
+.PHONY: run-app-with-obsv
+run-app-with-obsv:
 	OTEL_COLLECTOR_HOST="otel-collector:4317" \
 	docker compose down -v --remove-orphans 
 	docker compose up -d --build
 
 CERTS_DIR ?= certs
-
-.PHONY: generate-certs-and-keys
-generate-certs-and-keys: server-certs jwt-keys
-
-.PHONY: server-certs
-server-certs:
-	@echo "Generating self-signed server certificates"
-	@rm -rf $(CERTS_DIR)/server
-	@mkdir -p $(CERTS_DIR)/server
-	@openssl req -x509 -newkey rsa:2048 \
-		-keyout $(CERTS_DIR)/server/server.key \
-		-out $(CERTS_DIR)/server/server.crt \
-		-days 365 -sha256 -nodes \
-		-subj "/CN=localhost"
-
 .PHONY: jwt-keys
 jwt-keys:
 	@echo "Generating RSA private and public keys for JWT"

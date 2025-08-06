@@ -1,0 +1,66 @@
+import (
+    "context"
+    "time"
+)
+
+{{ $decorator := (or .Vars.DecoratorName (printf "%sWithMetrics" .Interface.Name)) }}
+
+type {{.Interface.Name}}Metrics struct {
+	RequestCounter  metric.Int64Counter
+	RequestDuration metric.Float64Histogram
+}
+
+type {{$decorator}} struct {
+    base {{.Interface.Type}}
+    metrics *{{.Interface.Name}}Metrics
+}
+
+func New{{$decorator}} (base {{.Interface.Type}}) *{{$decorator}}  {
+	meter := otel.GetMeterProvider().Meter("")
+
+    requestCounter, _ := meter.Int64Counter("{{.Interface.Name}}_requests_total", metric.WithDescription("Total number of {{.Interface.Name}} method calls"))
+    durationHistogram, _ := meter.Float64Histogram("{{.Interface.Name}}_request_duration_ms", metric.WithDescription("Duration of {{.Interface.Name}} method calls in milliseconds"))
+    
+    return &{{$decorator}} {
+        base: base,
+        metrics: &{{.Interface.Name}}Metrics{
+            RequestCounter: requestCounter,
+            RequestDuration: durationHistogram,
+        },
+    }
+}
+
+{{range $method := .Interface.Methods}}
+    func (_d *{{$decorator}}) {{$method.Name}}({{range $p := $method.Params}}{{if $p.Name}}{{$p.Name}} {{$p.Type}}{{end}}, {{end}}) ({{range $r := $method.Results}}{{if $r.Name}}{{$r.Name}} {{$r.Type}}{{end}}, {{end}}) {
+        startTime := time.Now()
+
+        var metricCtx context.Context
+        {{range $p := $method.Params}}
+            {{if eq $p.Type "context.Context"}}
+                metricCtx = {{$p.Name}}
+            {{end}}
+        {{end}}
+        if metricCtx == nil {
+            metricCtx = context.Background()
+        }
+
+        defer func() {
+            result := "ok"
+            {{- if $method.ReturnsError}}
+                if err != nil {
+                    result = "error"
+                }
+            {{end}}
+
+            _d.metrics.RequestCounter.Add(metricCtx, 1, 
+                metric.WithAttributes(
+                    attribute.String("method", "{{$method.Name}}"),
+                    attribute.String("status", result),
+                ),
+            )
+            duration := float64(time.Since(startTime).Milliseconds())
+            _d.metrics.RequestDuration.Record(metricCtx, duration, metric.WithAttributes(attribute.String("method", "{{$method.Name}}")))
+        }()
+        {{$method.Pass "_d.base."}}
+    }
+{{end}}

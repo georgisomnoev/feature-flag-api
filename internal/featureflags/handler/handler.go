@@ -14,15 +14,17 @@ import (
 
 //go:generate go run github.com/maxbrunsfeld/counterfeiter/v6 -generate
 //go:generate gowrap gen -g -p ./ -i AuthStore -t ../../observability/templates/otel_trace.tmpl -o ./wrapped/trace/auth_store.go
+//go:generate gowrap gen -g -p ./ -i AuthStore -t ../../observability/templates/otel_metric.tmpl -o ./wrapped/metric/auth_store.go
 //counterfeiter:generate . AuthStore
 type AuthStore interface {
-	UserExists(ctx context.Context, id uuid.UUID) (bool, error)
+	UserExists(context.Context, uuid.UUID) (bool, error)
 }
 
 //go:generate gowrap gen -g -p ./ -i JWTHelper -t ../../observability/templates/otel_trace.tmpl -o ./wrapped/trace/jwt_helper.go
+//go:generate gowrap gen -g -p ./ -i JWTHelper -t ../../observability/templates/otel_metric.tmpl -o ./wrapped/metric/jwt_helper.go
 //counterfeiter:generate . JWTHelper
 type JWTHelper interface {
-	ValidateToken(token string) (jwt.MapClaims, error)
+	ValidateToken(string) (jwt.MapClaims, error)
 }
 
 //go:generate gowrap gen -g -p ./ -i Service -t ../../observability/templates/otel_trace.tmpl -o ./wrapped/trace/service.go

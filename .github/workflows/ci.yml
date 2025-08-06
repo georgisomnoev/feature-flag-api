@@ -33,8 +33,15 @@ jobs:
       - name: Generate certificates and keys
         run: make generate-certs-and-keys
       
-      - name: Download dependencies
-        run: make vendor
+      - name: Cache Go modules
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/.cache/go-build
+            ~/go/pkg/mod
+          key: go-mod-${{ hashFiles('**/go.sum') }}
+          restore-keys: |
+            go-mod-
 
       - name: Run the app
         run: |

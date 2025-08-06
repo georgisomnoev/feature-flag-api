@@ -50,9 +50,5 @@ func main() {
 	authStore := auth.Process(pool, srv, jwtHelper)
 	featureflags.Process(pool, srv, authStore, jwtHelper)
 
-	tlsCfg := &webapi.TLSConfig{
-		CertFile: cfg.WebAPICertPath,
-		KeyFile:  cfg.WebAPIKeyPath,
-	}
-	webapi.Start(appCtx, srv, cfg.APIPort, tlsCfg)
+	webapi.Start(appCtx, srv, cfg.APIPort)
 }

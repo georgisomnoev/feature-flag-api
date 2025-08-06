@@ -21,15 +21,17 @@ var (
 
 //go:generate go run github.com/maxbrunsfeld/counterfeiter/v6 -generate
 //go:generate gowrap gen -g -p ./ -i Store -t ../../observability/templates/otel_trace.tmpl -o ./wrapped/trace/store.go
+//go:generate gowrap gen -g -p ./ -i Store -t ../../observability/templates/otel_metric.tmpl -o ./wrapped/metric/store.go
 //counterfeiter:generate . Store
 type Store interface {
 	GetByUsername(context.Context, string) (*model.User, error)
 }
 
 //go:generate gowrap gen -g -p ./ -i JWTHelper -t ../../observability/templates/otel_trace.tmpl -o ./wrapped/trace/jwt_helper.go
+//go:generate gowrap gen -g -p ./ -i JWTHelper -t ../../observability/templates/otel_metric.tmpl -o ./wrapped/metric/jwt_helper.go
 //counterfeiter:generate . JWTHelper
 type JWTHelper interface {
-	GenerateToken(claims jwt.Claims) (string, error)
+	GenerateToken(jwt.Claims) (string, error)
 }
 
 type Service struct {

@@ -9,15 +9,10 @@ import (
 )
 
 type Config struct {
-	APIPort        string
-	WebAPICertPath string
-	WebAPIKeyPath  string
-
+	APIPort           string
 	OtelCollectorHost string
-
 	JWTPrivateKeyPath string
 	JWTPublicKeyPath  string
-
 	DBConnectionURL   string
 	DBMaxConnLifetime time.Duration
 	DBMaxConnIdleTime time.Duration
@@ -28,9 +23,7 @@ type Config struct {
 
 func Load() *Config {
 	return &Config{
-		APIPort:           getEnv("API_PORT", "8443"),
-		WebAPICertPath:    getEnv("WEB_API_CERT_FILE", "certs/server/server.crt"),
-		WebAPIKeyPath:     getEnv("WEB_API_KEY_FILE", "certs/server/server.key"),
+		APIPort:           getEnv("API_PORT", "8080"),
 		OtelCollectorHost: getEnv("OTEL_COLLECTOR_HOST", ""),
 		JWTPrivateKeyPath: getEnv("JWT_PRIVATE_KEY_PATH", "certs/jwt_keys/private.pem"),
 		JWTPublicKeyPath:  getEnv("JWT_PUBLIC_KEY_PATH", "certs/jwt_keys/public.pem"),

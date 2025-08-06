@@ -11,9 +11,10 @@ import (
 	"github.com/georgisomnoev/feature-flag-api/internal/featureflags/model"
 	"github.com/google/uuid"
 
+	_codes "go.opentelemetry.io/otel/codes"
+
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
-	_codes "go.opentelemetry.io/otel/codes"
 	"go.opentelemetry.io/otel/trace"
 )
 

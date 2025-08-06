@@ -17,11 +17,6 @@ const (
 	contextTimeout          = 5 * time.Second
 )
 
-type TLSConfig struct {
-	CertFile string
-	KeyFile  string
-}
-
 func NewWebAPI() *echo.Echo {
 	e := echo.New()
 	e.HideBanner = true
@@ -37,11 +32,11 @@ func NewWebAPI() *echo.Echo {
 	return e
 }
 
-func Start(ctx context.Context, e *echo.Echo, apiPort string, tlsConfig *TLSConfig) {
+func Start(ctx context.Context, e *echo.Echo, apiPort string) {
 	go func() {
 		e.Logger.Infof("starting the WebAPI server on port: %s", apiPort)
 		addr := fmt.Sprintf(":%s", apiPort)
-		if err := e.StartTLS(addr, tlsConfig.CertFile, tlsConfig.KeyFile); err != nil && err != http.ErrServerClosed {
+		if err := e.Start(addr); err != nil && err != http.ErrServerClosed {
 			e.Logger.Fatalf("failed to start WebAPI server: %v", err)
 		}
 	}()
