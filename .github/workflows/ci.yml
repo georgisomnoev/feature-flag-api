@@ -31,7 +31,7 @@ jobs:
           govulncheck ./...
 
       - name: Generate certificates and keys
-        run: make generate-certs-and-keys
+        run: make jwt-keys
       
       - name: Cache Go modules
         uses: actions/cache@v3

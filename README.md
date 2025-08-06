@@ -32,9 +32,9 @@ User --> [Get/Post/Put/Delete /flags] --> Feature Flags Module
 ```bash
 make vendor
 ```
-- Generate server certificates and jwt keys:
+- Generate jwt keys:
 ```bash
-make generate-certs-and-keys
+make jwt-keys
 ```
 - Create a `.env` file. Feel free to use the `.env.example`.
 
