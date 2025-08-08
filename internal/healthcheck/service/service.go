@@ -1,5 +1,7 @@
 package service
 
+import "fmt"
+
 type Component interface {
 	Name() string
 	Check() error
@@ -19,7 +21,7 @@ func (h *Service) Status() (map[string]string, bool) {
 
 	for _, c := range h.components {
 		if err := c.Check(); err != nil {
-			status[c.Name()] = "unhealthy: " + err.Error()
+			status[c.Name()] = fmt.Sprintf("unhealthy: %s", err.Error())
 			allHealthy = false
 		} else {
 			status[c.Name()] = "ok"
