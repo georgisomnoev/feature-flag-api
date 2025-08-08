@@ -29,12 +29,6 @@ generate:
 .PHONY: run-app
 run-app:
 	docker compose down -v --remove-orphans 
-	docker compose up -d --build featureflagsapi featureflagsdb migratedb
-
-.PHONY: run-app-with-obsv
-run-app-with-obsv:
-	OTEL_COLLECTOR_HOST="otel-collector:4317" \
-	docker compose down -v --remove-orphans 
 	docker compose up -d --build
 
 CERTS_DIR ?= certs

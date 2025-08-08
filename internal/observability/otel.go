@@ -82,8 +82,6 @@ func initTracerProvider(ctx context.Context, conn *grpc.ClientConn, res *resourc
 }
 
 func initMetricProvider(ctx context.Context, conn *grpc.ClientConn, res *resource.Resource) (*metric.MeterProvider, error) {
-	// TODO: Create a custom metrics template for gowrap
-	// or use the prometheus gowrap template and prometheus exporter.
 	metricsExp, err := otlpmetricgrpc.New(ctx, otlpmetricgrpc.WithGRPCConn(conn))
 	if err != nil {
 		return nil, fmt.Errorf("failed to initiate metric exporter: %v", err)
