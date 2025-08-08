@@ -6,6 +6,8 @@ import (
 	"github.com/georgisomnoev/feature-flag-api/internal/auth"
 	"github.com/georgisomnoev/feature-flag-api/internal/config"
 	"github.com/georgisomnoev/feature-flag-api/internal/featureflags"
+	"github.com/georgisomnoev/feature-flag-api/internal/healthcheck"
+	"github.com/georgisomnoev/feature-flag-api/internal/healthcheck/component"
 	"github.com/georgisomnoev/feature-flag-api/internal/jwthelper"
 	"github.com/georgisomnoev/feature-flag-api/internal/lifecycle"
 	"github.com/georgisomnoev/feature-flag-api/internal/observability"
@@ -49,6 +51,9 @@ func main() {
 
 	authStore := auth.Process(pool, srv, jwtHelper)
 	featureflags.Process(pool, srv, authStore, jwtHelper)
+
+	dbComp := component.NewDBComponent(pool)
+	healthcheck.Process(srv, dbComp)
 
 	webapi.Start(appCtx, srv, cfg.APIPort)
 }
