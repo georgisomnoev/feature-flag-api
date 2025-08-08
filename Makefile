@@ -29,6 +29,12 @@ generate:
 .PHONY: run-app
 run-app:
 	docker compose down -v --remove-orphans 
+	docker compose up -d --build featureflagsapi featureflagsdb migratedb
+
+# Set OTEL_COLLECTOR_ENABLED to true in the .env file if you wish to start collecting metrics/traces.
+.PHONY: run-app-with-obsv
+run-app-with-obsv:
+	docker compose down -v --remove-orphans 
 	docker compose up -d --build
 
 CERTS_DIR ?= certs

@@ -14,12 +14,12 @@ COPY internal ./internal
 COPY cmd ./cmd
 
 
-RUN go build -o feature_flags_api ./cmd/feature_flags_api
+RUN go build -o featureflagsapi ./cmd/featureflagsapi
 
 FROM alpine:latest
 
 WORKDIR /app
-COPY --from=builder /build/feature_flags_api .
+COPY --from=builder /build/featureflagsapi .
 COPY certs ./certs
 
-CMD ["./feature_flags_api"]
+CMD ["./featureflagsapi"]

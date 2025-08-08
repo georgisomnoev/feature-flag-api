@@ -9,8 +9,6 @@ services:
         condition: service_completed_successfully 
     ports:
       - "8080:8080"
-    environment:
-      - OTEL_COLLECTOR_HOST=otel-collector:4317
     env_file:
       - .env
   migratedb:

@@ -28,10 +28,6 @@ User --> [Get/Post/Put/Delete /flags] --> Feature Flags Module
 
 
 ## Initial setup
-- Download the dependencies:
-```bash
-make vendor
-```
 - Generate jwt keys:
 ```bash
 make jwt-keys
