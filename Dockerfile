@@ -21,5 +21,6 @@ FROM alpine:latest
 WORKDIR /app
 COPY --from=builder /build/featureflagsapi .
 COPY certs ./certs
+COPY migrations ./migrations
 
 CMD ["./featureflagsapi"]

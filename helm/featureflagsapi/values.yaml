@@ -1,0 +1,24 @@
+featureflags:
+  name: featureflagsapi
+  replicaCount: 1
+  image:
+    repository: georgisomnoev2/featureflagsapi
+    tag: v0.0.2
+  env:
+    apiPort: "8080"
+
+secrets:
+  name: "secrets-ffa"
+
+postgresql:
+  auth:
+    username: ffuser
+    database: featureflagsdb
+    existingSecret: "secrets-ffa"
+    secretKeys:
+      userPasswordKey: db-password
+
+migrate:
+  image:
+    repository: migrate/migrate
+    tag: latest

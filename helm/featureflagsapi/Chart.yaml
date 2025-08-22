@@ -1,0 +1,10 @@
+apiVersion: v1
+name: featureflagsapi
+description: Using helm for deploying the feature flags api
+type: application
+version: 0.0.1
+appVersion: 0.0.1
+dependencies:
+  - name: postgresql
+    version:  16.7.4
+    repository: https://charts.bitnami.com/bitnami

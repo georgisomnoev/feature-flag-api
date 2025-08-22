@@ -1,0 +1,26 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Values.featureflags.name }}
+spec:
+  replicas: {{ .Values.featureflags.replicaCount }}
+  selector:
+    matchLabels:
+      app: {{ .Values.featureflags.name }}
+  template:
+    metadata:
+      labels:
+        app: {{ .Values.featureflags.name }}
+    spec:
+      containers:
+        - name: {{ .Values.featureflags.name }}
+          image: "{{ .Values.featureflags.image.repository }}:{{ .Values.featureflags.image.tag }}"
+          imagePullPolicy: {{ .Values.featureflags.image.pullPolicy }}
+          ports:
+            - containerPort: {{ .Values.featureflags.env.apiPort | int }}
+          env:
+            - name: DB_CONNECTION_URL
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.secrets.name }}
+                  key: db-url
